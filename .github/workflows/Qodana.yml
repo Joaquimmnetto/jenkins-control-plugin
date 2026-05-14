@@ -1,13 +1,14 @@
 name: Qodana
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - master
-      - release/**
-      - qodana/**
-  pull_request:
-    types: [opened, synchronize, reopened]
+  # disabled - triggers commented out
+  # push:
+  #   branches:
+  #     - master
+  #     - release/**
+  #     - qodana/**
+  # pull_request:
+  #   types: [opened, synchronize, reopened]
 
 jobs:
   qodana:

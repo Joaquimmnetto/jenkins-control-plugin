@@ -62,29 +62,19 @@ public class JenkinsComponent implements SearchableConfigurable {
     }
 
     private boolean isModified(JenkinsAppSettings appSettingsFromUi, JenkinsAppSettings jenkinsAppSettings) {
-        boolean statusToIgnoreModified =//
-                appSettingsFromUi.shouldDisplaySuccessOrStable() != jenkinsAppSettings.shouldDisplaySuccessOrStable()
-                        || appSettingsFromUi.shouldDisplayFailOrUnstable() != jenkinsAppSettings.shouldDisplayFailOrUnstable()
-                        || appSettingsFromUi.shouldDisplayAborted() != jenkinsAppSettings.shouldDisplayAborted();
-
         boolean isUseGreenColor = appSettingsFromUi.isUseGreenColor() != jenkinsAppSettings.isUseGreenColor();
-        boolean isShowAllInStatusbar = appSettingsFromUi.isShowAllInStatusbar() != jenkinsAppSettings.isShowAllInStatusbar();
         boolean isAutoLoadBuilds = appSettingsFromUi.isAutoLoadBuilds() != jenkinsAppSettings.isAutoLoadBuilds();
         boolean isDoubleClickActionChanged = appSettingsFromUi.getDoubleClickAction() != jenkinsAppSettings.getDoubleClickAction();
         boolean isShowLogIfTriggerBuildChanged = appSettingsFromUi.isShowLogIfTriggerBuild() != jenkinsAppSettings.isShowLogIfTriggerBuild();
 
         return jenkinsAppSettings.getBuildDelay() != appSettingsFromUi.getBuildDelay()
                 || jenkinsAppSettings.getJobRefreshPeriod() != appSettingsFromUi.getJobRefreshPeriod()
-                || jenkinsAppSettings.getRssRefreshPeriod() != appSettingsFromUi.getRssRefreshPeriod()
                 || jenkinsAppSettings.getNumBuildRetries() != appSettingsFromUi.getNumBuildRetries()
                 || jenkinsAppSettings.getBuildsToLoadPerJob() != appSettingsFromUi.getBuildsToLoadPerJob()
                 || isUseGreenColor
-                || isShowAllInStatusbar
                 || isAutoLoadBuilds
                 || isDoubleClickActionChanged
-                || isShowLogIfTriggerBuildChanged
-                || statusToIgnoreModified
-                || (!jenkinsAppSettings.getSuffix().equals(appSettingsFromUi.getSuffix()));
+                || isShowLogIfTriggerBuildChanged;
     }
 
     @Override
@@ -115,16 +105,9 @@ public class JenkinsComponent implements SearchableConfigurable {
 
         jenkinsAppSettings.setDelay(jenkinsAppSettingsFromUi.getBuildDelay());
         jenkinsAppSettings.setJobRefreshPeriod(jenkinsAppSettingsFromUi.getJobRefreshPeriod());
-        jenkinsAppSettings.setRssRefreshPeriod(jenkinsAppSettingsFromUi.getRssRefreshPeriod());
         jenkinsAppSettings.setNumBuildRetries(jenkinsAppSettingsFromUi.getNumBuildRetries());
         jenkinsAppSettings.setBuildsToLoadPerJob(jenkinsAppSettingsFromUi.getBuildsToLoadPerJob());
-
-        jenkinsAppSettings.setDisplaySuccessOrStable(jenkinsAppSettingsFromUi.shouldDisplaySuccessOrStable());
-        jenkinsAppSettings.setDisplayUnstableOrFail(jenkinsAppSettingsFromUi.shouldDisplayFailOrUnstable());
-        jenkinsAppSettings.setDisplayAborted(jenkinsAppSettingsFromUi.shouldDisplayAborted());
-        jenkinsAppSettings.setSuffix(jenkinsAppSettingsFromUi.getSuffix());
         jenkinsAppSettings.setUseGreenColor(jenkinsAppSettingsFromUi.isUseGreenColor());
-        jenkinsAppSettings.setShowAllInStatusbar(jenkinsAppSettingsFromUi.isShowAllInStatusbar());
         jenkinsAppSettings.setAutoLoadBuilds(jenkinsAppSettingsFromUi.isAutoLoadBuilds());
         jenkinsAppSettings.setDoubleClickAction(jenkinsAppSettingsFromUi.getDoubleClickAction());
         jenkinsAppSettings.setShowLogIfTriggerBuild(jenkinsAppSettingsFromUi.isShowLogIfTriggerBuild());
@@ -145,18 +128,12 @@ public class JenkinsComponent implements SearchableConfigurable {
 
         appSettingComponentToReset.setBuildDelay(jenkinsAppSettings.getBuildDelay());
         appSettingComponentToReset.setJobRefreshPeriod(jenkinsAppSettings.getJobRefreshPeriod());
-        appSettingComponentToReset.setRssRefreshPeriod(jenkinsAppSettings.getRssRefreshPeriod());
         appSettingComponentToReset.setNumBuildRetries(jenkinsAppSettings.getNumBuildRetries());
         appSettingComponentToReset.setBuildsToLoadPerJob(jenkinsAppSettings.getBuildsToLoadPerJob());
         appSettingComponentToReset.setDoubleClickAction(jenkinsAppSettings.getDoubleClickAction());
         appSettingComponentToReset.setUseGreenColor(jenkinsAppSettings.isUseGreenColor());
-        appSettingComponentToReset.setShowAllInStatusbar(jenkinsAppSettings.isShowAllInStatusbar());
         appSettingComponentToReset.setAutoLoadBuilds(jenkinsAppSettings.isAutoLoadBuilds());
         appSettingComponentToReset.setShowLogIfTriggerBuild(jenkinsAppSettings.isShowLogIfTriggerBuild());
-        appSettingComponentToReset.setShouldDisplaySuccessOrStable(jenkinsAppSettings.shouldDisplaySuccessOrStable());
-        appSettingComponentToReset.setShouldDisplayUnstableOrFail(jenkinsAppSettings.shouldDisplayFailOrUnstable());
-        appSettingComponentToReset.setShouldDisplayAborted(jenkinsAppSettings.shouldDisplayAborted());
-        appSettingComponentToReset.setReplaceWithSuffix(jenkinsAppSettings.getSuffix());
     }
 
     @NotNull

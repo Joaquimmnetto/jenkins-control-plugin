@@ -21,7 +21,6 @@ import com.intellij.ui.JBColor;
 import com.intellij.ui.SimpleListCellRenderer;
 import com.intellij.ui.list.ListCellBackgroundSupplier;
 import com.intellij.util.ui.UIUtil;
-import org.codinjutsu.tools.jenkins.model.FavoriteView;
 import org.codinjutsu.tools.jenkins.model.View;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -42,9 +41,6 @@ public class JenkinsViewComboRenderer extends SimpleListCellRenderer<View>
             setForeground(UIUtil.getLabelDisabledForeground());
         }
         setText(getText(view));
-        if (view instanceof FavoriteView) {
-            setIcon(JenkinsTreeRenderer.FAVORITE_ICON);
-        }
     }
 
     @Override

@@ -123,7 +123,6 @@ public class ServerConfigurable implements SearchableConfigurable {
         final var jenkinsServerSetting = JenkinsAppSettings.getSafeInstance(project);
         final var jenkinsSettings = JenkinsSettings.getSafeInstance(project);
         if (!StringUtil.equals(jenkinsServerSetting.getServerUrl(), serverSetting.getUrl())) {
-            jenkinsSettings.clearFavoriteJobs();
             jenkinsSettings.setLastSelectedView(null);
         }
 

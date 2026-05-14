@@ -52,8 +52,7 @@ public class JenkinsTree implements PersistentStateComponent<JenkinsTreeState> {
         this.tree = new TreeWithoutDefaultSearch(this::getSelectedPathComponents);
 
         this.tree.getEmptyText().setText(LOADING);
-        this.tree.setCellRenderer(new JenkinsTreeRenderer(jenkinsSettings::isFavoriteJob,
-                BuildStatusEnumRenderer.getInstance(project)));
+        this.tree.setCellRenderer(new JenkinsTreeRenderer(BuildStatusEnumRenderer.getInstance(project)));
         this.tree.setName("jobTree");
 
         GuiUtil.runInSwingThread(() -> {

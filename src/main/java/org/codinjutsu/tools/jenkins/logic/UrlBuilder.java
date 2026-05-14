@@ -38,7 +38,6 @@ public class UrlBuilder {
 
     private static final String API_JSON = "/api/json";
     private static final String BUILD = "/build";
-    private static final String RSS_LATEST = "/rssLatest";
     private static final String TREE_PARAM = "?tree=";
     private static final String URL = "url";
     private static final String BASIC_JENKINS_INFO = URL + ",description,nodeName,nodeDescription,primaryView[name,url],views[name,url,views[name,url]]";
@@ -136,10 +135,6 @@ public class UrlBuilder {
 
     public URL createBuildsUrl(String buildUrl, RangeToLoad rangeToLoad) {
         return buildUrl(buildUrl, encodePathQuery(API_JSON + TREE_PARAM + BASIC_BUILDS_INFO + rangeToLoad.toQueryParameter()));
-    }
-
-    public URL createRssLatestUrl(String serverUrl) {
-        return buildUrl(serverUrl, RSS_LATEST);
     }
 
     public URL createAuthenticationUrl(String serverUrl) {

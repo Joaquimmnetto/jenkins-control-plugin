@@ -63,7 +63,6 @@ public class RequestManager implements RequestManagerInterface, Disposable {
     private final Project project;
 
     private final UrlBuilder urlBuilder;
-    private final RssParser rssParser = new RssParser();
     private @NotNull JenkinsParser jenkinsParser = new JenkinsJsonParser(UnaryOperator.identity());
     private SecurityClient securityClient;
     private @Deprecated JenkinsPlateform jenkinsPlateform = JenkinsPlateform.CLASSIC;
@@ -106,19 +105,6 @@ public class RequestManager implements RequestManagerInterface, Disposable {
             throw new ConfigurationException(validationResult.getFirstError());
         }
         return jenkins;
-    }
-
-    /**
-     * Note! needs to be called after plugin is logged in
-     */
-    @Override
-    public Map<String, Build> loadJenkinsRssLatestBuilds(JenkinsAppSettings configuration) {
-        if (handleNotYetLoggedInState()) return Collections.emptyMap();
-        URL url = urlBuilder.createRssLatestUrl(configuration.getServerUrl());
-
-        String rssData = securityClient.execute(url);
-
-        return rssParser.loadJenkinsRssLatestBuilds(rssData);
     }
 
     private List<Job> loadJenkinsView(String viewUrl) {
@@ -321,16 +307,6 @@ public class RequestManager implements RequestManagerInterface, Disposable {
         }
         final String serverData = securityClientForTest.connect(urlBuilder.createAuthenticationUrl(serverUrl));
         return jsonParserWithServerUrls.getServerUrl(serverData);
-    }
-
-    @Override
-    public List<Job> loadFavoriteJobs(List<JenkinsSettings.FavoriteJob> favoriteJobs) {
-        if (handleNotYetLoggedInState()) return Collections.emptyList();
-        final List<Job> jobs = new LinkedList<>();
-        for (JenkinsSettings.FavoriteJob favoriteJob : favoriteJobs) {
-            jobs.add(loadJob(favoriteJob.getUrl()));
-        }
-        return withNestedJobs(jobs);
     }
 
     @Override

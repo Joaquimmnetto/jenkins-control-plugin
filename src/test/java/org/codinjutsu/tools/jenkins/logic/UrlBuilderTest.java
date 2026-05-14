@@ -66,12 +66,6 @@ public class UrlBuilderTest {
     }
 
     @Test
-    public void createRssLastBuildUrl() {
-        URL url = urlBuilder.createRssLatestUrl("http://localhost:8080/jenkins");
-        assertThat(url).hasToString("http://localhost:8080/jenkins/rssLatest");
-    }
-
-    @Test
     public void createAuthenticationJSONUrl() {
         URL url = urlBuilder.createAuthenticationUrl("http://localhost:8080/jenkins");
         assertThat(url).hasToString("http://localhost:8080/jenkins/api/json?tree=nodeName,url,description,primaryView%5Bname,url%5D");

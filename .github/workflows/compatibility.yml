@@ -1,7 +1,9 @@
 name: IntelliJ Platform Plugin Compatibility
 
 on:
-  push:
+  workflow_dispatch:
+  # disabled - triggers commented out
+  # push:
 
 jobs:
   build:

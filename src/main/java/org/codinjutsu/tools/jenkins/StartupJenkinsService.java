@@ -13,7 +13,6 @@ import kotlin.Unit;
 import kotlin.coroutines.Continuation;
 import org.codinjutsu.tools.jenkins.logic.BrowserPanelAuthenticationHandler;
 import org.codinjutsu.tools.jenkins.logic.LoginService;
-import org.codinjutsu.tools.jenkins.logic.RssAuthenticationActionHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -34,7 +33,6 @@ public class StartupJenkinsService implements ProjectActivity, DynamicPluginList
     @Nullable
     @Override
     public Object execute(@NotNull Project project, @NotNull Continuation<? super Unit> continuation) {
-        RssAuthenticationActionHandler.getInstance(project).subscribe();
         BrowserPanelAuthenticationHandler.getInstance(project).subscribe();
         final LoginService loginService = LoginService.getInstance(project);
         AppUIUtil.invokeLaterIfProjectAlive(project, loginService::performAuthentication);

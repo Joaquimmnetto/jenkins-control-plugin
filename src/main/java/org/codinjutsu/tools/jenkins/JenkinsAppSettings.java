@@ -23,8 +23,6 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import lombok.Data;
-import org.codinjutsu.tools.jenkins.model.Build;
-import org.codinjutsu.tools.jenkins.model.BuildStatusEnum;
 import org.jetbrains.annotations.NotNull;
 
 @State(
@@ -99,65 +97,6 @@ public class JenkinsAppSettings implements PersistentStateComponent<JenkinsAppSe
         myState.setJobRefreshPeriod(jobRefreshPeriod);
     }
 
-    public int getRssRefreshPeriod() {
-        return myState.getRssRefreshPeriod();
-    }
-
-    public void setRssRefreshPeriod(int rssRefreshPeriod) {
-        myState.setRssRefreshPeriod(rssRefreshPeriod);
-    }
-
-    public String getSuffix() {
-        return myState.getSuffix();
-    }
-
-    public void setSuffix(String suffix) {
-        myState.setSuffix(suffix);
-    }
-
-    private RssSettings getRssSettings() {
-        return myState.getRssSettings();
-    }
-
-    public boolean shouldDisplaySuccessOrStable() {
-        return getRssSettings().isDisplaySuccessOrStable();
-    }
-
-    public boolean shouldDisplayFailOrUnstable() {
-        return getRssSettings().isDisplayUnstableOrFail();
-    }
-
-    public boolean shouldDisplayAborted() {
-        return getRssSettings().isDisplayAborted();
-    }
-
-    public void setDisplaySuccessOrStable(boolean displaySuccessOrStable) {
-        getRssSettings().setDisplaySuccessOrStable(displaySuccessOrStable);
-    }
-
-    public void setDisplayUnstableOrFail(boolean displayUnstableOrFail) {
-        getRssSettings().setDisplayUnstableOrFail(displayUnstableOrFail);
-    }
-
-    public void setDisplayAborted(boolean displayAborted) {
-        getRssSettings().setDisplayAborted(displayAborted);
-    }
-
-    public boolean shouldDisplayOnLogEvent(Build build) {
-        BuildStatusEnum buildStatus = build.getStatus();
-        if (BuildStatusEnum.SUCCESS.equals(buildStatus) || BuildStatusEnum.STABLE.equals(buildStatus)) {
-            return shouldDisplaySuccessOrStable();
-        }
-        if (BuildStatusEnum.FAILURE.equals(buildStatus) || BuildStatusEnum.UNSTABLE.equals(buildStatus)) {
-            return shouldDisplayFailOrUnstable();
-        }
-        if (BuildStatusEnum.ABORTED.equals(buildStatus)) {
-            return shouldDisplayAborted();
-        }
-
-        return false;
-    }
-
     public int getNumBuildRetries() {
         return myState.getNumBuildRetries();
     }
@@ -172,14 +111,6 @@ public class JenkinsAppSettings implements PersistentStateComponent<JenkinsAppSe
 
     public void setUseGreenColor(boolean useGreenColor) {
         myState.setUseGreenColor(useGreenColor);
-    }
-
-    public boolean isShowAllInStatusbar() {
-        return myState.isShowAllInStatusbar();
-    }
-
-    public void setShowAllInStatusbar(boolean showAllInStatusbar) {
-        myState.setShowAllInStatusbar(showAllInStatusbar);
     }
 
     public boolean isAutoLoadBuilds() {
@@ -221,23 +152,12 @@ public class JenkinsAppSettings implements PersistentStateComponent<JenkinsAppSe
         private String serverUrl = DUMMY_JENKINS_SERVER_URL;
         private int delay = DEFAULT_BUILD_DELAY;
         private int jobRefreshPeriod = RESET_PERIOD_VALUE;
-        private int rssRefreshPeriod = RESET_PERIOD_VALUE;
-        private String suffix = "";
 
         private int numBuildRetries = DEFAULT_BUILD_RETRY;
         private int buildsToLoadPerJob = DEFAULT_JOBS_PER_BUILD;
-        private RssSettings rssSettings = new RssSettings();
         private boolean useGreenColor = false;
-        private boolean showAllInStatusbar = false;
         private boolean autoLoadBuilds = false;
         private DoubleClickAction doubleClickAction = DoubleClickAction.DEFAULT;
         private boolean showLogIfTriggerBuild = true;
-    }
-
-    @Data
-    public static class RssSettings {
-        private boolean displaySuccessOrStable = true;
-        private boolean displayUnstableOrFail = true;
-        private boolean displayAborted = true;
     }
 }
