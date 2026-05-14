@@ -13,15 +13,11 @@ import java.util.Map;
 public interface RequestManagerInterface {
     Jenkins loadJenkinsWorkspace(JenkinsAppSettings configuration, JenkinsSettings jenkinsSettings);
 
-    Map<String, Build> loadJenkinsRssLatestBuilds(JenkinsAppSettings configuration);
-
     void runBuild(Job job, JenkinsAppSettings configuration, Map<String, ?> parameters);
 
     void authenticate(JenkinsAppSettings jenkinsAppSettings, JenkinsSettings jenkinsSettings);
 
     String testAuthenticate(String serverUrl, String username, String password, String crumbData, JenkinsVersion version, int connectionTimoutInSeconds);
-
-    List<Job> loadFavoriteJobs(List<JenkinsSettings.FavoriteJob> favoriteJobs);
 
     void stopBuild(Build build);
 

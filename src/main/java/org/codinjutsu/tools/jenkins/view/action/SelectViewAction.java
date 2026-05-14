@@ -26,7 +26,6 @@ import com.intellij.openapi.ui.popup.JBPopup;
 import com.intellij.openapi.ui.popup.PopupChooserBuilder;
 import com.intellij.ui.awt.RelativePoint;
 import com.intellij.ui.components.JBList;
-import org.codinjutsu.tools.jenkins.model.FavoriteView;
 import org.codinjutsu.tools.jenkins.model.View;
 import org.codinjutsu.tools.jenkins.view.BrowserPanel;
 import org.codinjutsu.tools.jenkins.view.JenkinsViewComboRenderer;
@@ -68,14 +67,8 @@ public class SelectViewAction extends DumbAwareAction implements CustomComponent
         myPanel.addMouseListener(new MyMouseAdapter());
     }
 
-    private JBList<View> buildViewList(List<View> views, BrowserPanel browserPanel) {
-        List<View> unflattenViews = flatViewList(views);
-
-        if (browserPanel.hasFavoriteJobs()) {
-            unflattenViews.add(FavoriteView.create());
-        }
-
-        final JBList<View> viewList = new JBList<>(unflattenViews);
+    private JBList<View> buildViewList(List<View> views) {
+        final JBList<View> viewList = new JBList<>(flatViewList(views));
         viewList.setCellRenderer(new JenkinsViewComboRenderer());
         return viewList;
     }
@@ -129,7 +122,7 @@ public class SelectViewAction extends DumbAwareAction implements CustomComponent
                 return;
             }
 
-            final JBList<View> viewList = buildViewList(views, browserPanel);
+            final JBList<View> viewList = buildViewList(views);
 
             JBPopup popup = new PopupChooserBuilder<>(viewList)
                     .setMovable(false)

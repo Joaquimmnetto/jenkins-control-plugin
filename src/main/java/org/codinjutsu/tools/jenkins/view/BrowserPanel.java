@@ -85,7 +85,6 @@ public final class BrowserPanel extends SimpleToolWindowPanel implements Persist
     private JPanel jobPanel;
     private boolean sortedByBuildStatus;
     private ScheduledFuture<?> refreshViewFutureTask;
-    private FavoriteView favoriteView;
     @Nullable
     private View currentSelectedView;
 
@@ -135,39 +134,6 @@ public final class BrowserPanel extends SimpleToolWindowPanel implements Persist
 
     public static BrowserPanel getInstance(Project project) {
         return project.getService(BrowserPanel.class);
-    }
-
-    private static void visit(Job job, BuildStatusVisitor buildStatusVisitor) {
-        Build lastBuild = job.getLastBuild();
-        if (job.isBuildable() && lastBuild != null) {
-            BuildStatusEnum status = lastBuild.getStatus();
-            if (job.getLastBuild() != null && job.getLastBuild().isBuilding()) {
-                buildStatusVisitor.visitBuilding();
-                return;
-            }
-            if (BuildStatusEnum.FAILURE == status) {
-                buildStatusVisitor.visitFailed();
-                return;
-            }
-            if (BuildStatusEnum.SUCCESS == status) {
-                buildStatusVisitor.visitSuccess();
-                return;
-            }
-            if (BuildStatusEnum.UNSTABLE == status) {
-                buildStatusVisitor.visitUnstable();
-                return;
-            }
-            if (BuildStatusEnum.ABORTED == status) {
-                buildStatusVisitor.visitAborted();
-                return;
-            }
-            if (BuildStatusEnum.NULL == status) {
-                buildStatusVisitor.visitUnknown();
-                return;
-            }
-        }
-
-        buildStatusVisitor.visitUnknown();
     }
 
     private void updateDoubleClickAction(@NotNull JobAction doubleClickAction) {
@@ -282,16 +248,7 @@ public final class BrowserPanel extends SimpleToolWindowPanel implements Persist
     }
 
     private void updateJobNode(Job job) {
-        BuildStatusAggregator buildStatusAggregator = new BuildStatusAggregator();
-        GuiUtil.runInSwingThread(() -> {
-            jobTree.updateJobNode(job);
-            CollectionUtil.flattenedJobs(jenkins.getJobs()).forEach(j -> visit(j, buildStatusAggregator));
-            JenkinsStatusBarWidget.getInstance(project).updateStatusIcon(buildStatusAggregator);
-        });
-    }
-
-    public boolean hasFavoriteJobs() {
-        return jenkinsSettings.hasFavoriteJobs();
+        GuiUtil.runInSwingThread(() -> jobTree.updateJobNode(job));
     }
 
     public void notifyInfoJenkinsToolWindow(@NotNull String message) {
@@ -318,20 +275,13 @@ public final class BrowserPanel extends SimpleToolWindowPanel implements Persist
 
     private void clearView() {
         jobTree.clear();
-        JenkinsStatusBarWidget.getInstance(project).updateStatusIcon(BuildStatusAggregator.EMPTY);
     }
 
     public void postAuthenticationInitialization() {
-        if (hasFavoriteJobs()) {
-            createFavoriteViewIfNecessary();
-        }
-
         String lastSelectedViewName = jenkinsSettings.getLastSelectedView();
         View viewToLoad;
         if (StringUtil.isEmpty(lastSelectedViewName)) {
             viewToLoad = jenkins.getPrimaryView();
-        } else if (favoriteView != null && lastSelectedViewName.equals(favoriteView.getName())) {
-            viewToLoad = favoriteView;
         } else {
             viewToLoad = jenkins.getViewByName(lastSelectedViewName);
         }
@@ -352,7 +302,6 @@ public final class BrowserPanel extends SimpleToolWindowPanel implements Persist
         actionGroup.add(actionManager.getAction(RunBuildAction.ACTION_ID));
         actionGroup.add(actionManager.getAction(StopBuildAction.ACTION_ID));
         actionGroup.add(new SortByStatusAction(this));
-        actionGroup.add(new RefreshRssAction());
         actionGroup.addSeparator();
         actionGroup.add(actionManager.getAction("Jenkins.ShowSettingsGroup"));
 
@@ -374,10 +323,6 @@ public final class BrowserPanel extends SimpleToolWindowPanel implements Persist
         popupGroup.add(new ShowLogAction(BuildType.LAST_SUCCESSFUL));
         popupGroup.add(new ShowLogAction(BuildType.LAST_FAILED));
         popupGroup.add(new ShowBuildLogAction());
-        popupGroup.addSeparator();
-        popupGroup.add(new SetJobAsFavoriteAction(this));
-
-        popupGroup.add(new UnsetJobAsFavoriteAction(this));
         popupGroup.addSeparator();
         popupGroup.add(new GotoServerAction(this));
         popupGroup.add(new GotoJobPageAction(this));
@@ -405,35 +350,6 @@ public final class BrowserPanel extends SimpleToolWindowPanel implements Persist
             logger.warn("BrowserPanel.refreshCurrentView called outside EDT");
         }
         refreshViewJob.run();
-    }
-
-    public void setAsFavorite(final List<Job> jobs) {
-        jenkinsSettings.addFavorite(jobs);
-        createFavoriteViewIfNecessary();
-        updateSelection();
-    }
-
-    public void removeFavorite(final List<Job> selectedJobs) {
-        jenkinsSettings.removeFavorite(selectedJobs);
-        updateSelection();
-        if (jenkinsSettings.isFavoriteViewEmpty() && currentSelectedView instanceof FavoriteView) {
-            favoriteView = null;
-            loadView(jenkins.getPrimaryView());
-        } else {
-            if (currentSelectedView instanceof FavoriteView) {
-                loadView(currentSelectedView);
-            }
-        }
-    }
-
-    public boolean isAFavoriteJob(@NotNull Job job) {
-        return jenkinsSettings.isFavoriteJob(job);
-    }
-
-    private void createFavoriteViewIfNecessary() {
-        if (favoriteView == null) {
-            favoriteView = FavoriteView.create();
-        }
     }
 
     public boolean isConfigured() {
@@ -548,12 +464,7 @@ public final class BrowserPanel extends SimpleToolWindowPanel implements Persist
 
         @Override
         public void onSuccess() {
-            final BuildStatusAggregator buildStatusAggregator = new BuildStatusAggregator();
-
-            GuiUtil.runInSwingThread(() -> {
-                fillJobTree(buildStatusAggregator);
-                JenkinsStatusBarWidget.getInstance(project).updateStatusIcon(buildStatusAggregator);
-            });
+            GuiUtil.runInSwingThread(this::fillJobTree);
         }
 
         private void loadJobs() {
@@ -562,11 +473,7 @@ public final class BrowserPanel extends SimpleToolWindowPanel implements Persist
             }
             final List<Job> jobList;
             final View viewToLoadJobs = currentSelectedView;
-            if (viewToLoadJobs instanceof FavoriteView) {
-                jobList = requestManager.loadFavoriteJobs(jenkinsSettings.getFavoriteJobs());
-            } else {
-                jobList = requestManager.loadJenkinsView(viewToLoadJobs);
-            }
+            jobList = requestManager.loadJenkinsView(viewToLoadJobs);
             if (jenkinsAppSettings.isAutoLoadBuilds()) {
                 for (Job job : jobList) {
                     job.setLastBuilds(requestManager.loadBuilds(job));
@@ -584,11 +491,10 @@ public final class BrowserPanel extends SimpleToolWindowPanel implements Persist
             return currentSelectedView;
         }
 
-        private void fillJobTree(final BuildStatusVisitor buildStatusVisitor) {
+        private void fillJobTree() {
             final List<Job> jobList = jenkins.getJobs();
             jobTree.keepLastState(() -> {
                 jobTree.setJobs(jobList);
-                CollectionUtil.flattenedJobs(jobList).forEach(job -> visit(job, buildStatusVisitor));
                 watch();
                 jobTree.sortJobs(getCurrentSorting());
             });

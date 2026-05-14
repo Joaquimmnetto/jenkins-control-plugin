@@ -23,7 +23,6 @@ import com.intellij.ui.ColoredTreeCellRenderer;
 import com.intellij.ui.RowIcon;
 import com.intellij.ui.SimpleTextAttributes;
 import com.intellij.util.text.DateFormatUtil;
-import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Delegate;
 import org.codinjutsu.tools.jenkins.model.*;
@@ -36,17 +35,15 @@ import javax.swing.tree.TreeNode;
 import java.util.Optional;
 import java.util.function.Function;
 
-@AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class JenkinsTreeRenderer extends ColoredTreeCellRenderer {
 
-    public static final Icon FAVORITE_ICON = AllIcons.Nodes.Favorite;
-
-    @NotNull
-    private final FavoriteJobDetector favoriteJobDetector;
-
     @NotNull
     private final BuildStatusRenderer buildStatusRenderer;
+
+    public JenkinsTreeRenderer(@NotNull BuildStatusRenderer buildStatusRenderer) {
+        this.buildStatusRenderer = buildStatusRenderer;
+    }
 
     @Override
     public void customizeCellRenderer(@NotNull JTree tree, Object value, boolean selected, boolean expanded,
@@ -178,11 +175,7 @@ public class JenkinsTreeRenderer extends ColoredTreeCellRenderer {
         final Job job = jobNode.job();
         append(buildLabel(job, parent.flatMap(this::getJenkinsTreeNode)), getAttribute(job));
         setToolTipText(job.getHealthDescription());
-        if (favoriteJobDetector.isFavoriteJob(job)) {
-            setIcon(new CompositeIcon(getBuildStatusColor(job), job.getHealthIcon(), FAVORITE_ICON));
-        } else {
-            setIcon(new CompositeIcon(getBuildStatusColor(job), job.getHealthIcon()));
-        }
+        setIcon(new CompositeIcon(getBuildStatusColor(job), job.getHealthIcon()));
     }
 
     private void render(JenkinsTreeNode.BuildParameterNode buildParameterNode) {
@@ -197,12 +190,6 @@ public class JenkinsTreeRenderer extends ColoredTreeCellRenderer {
         public CompositeIcon(Icon... icons) {
             this.rowIcon = new RowIcon(icons);
         }
-    }
-
-    @FunctionalInterface
-    public interface FavoriteJobDetector {
-
-        boolean isFavoriteJob(@NotNull Job job);
     }
 
 }

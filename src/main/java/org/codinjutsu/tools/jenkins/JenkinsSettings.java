@@ -28,14 +28,8 @@ import com.intellij.util.xmlb.XmlSerializerUtil;
 import com.intellij.util.xmlb.annotations.Attribute;
 import com.intellij.util.xmlb.annotations.Tag;
 import lombok.*;
-import org.codinjutsu.tools.jenkins.model.Job;
 import org.codinjutsu.tools.jenkins.security.JenkinsVersion;
-import org.codinjutsu.tools.jenkins.util.JobUtil;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.LinkedList;
-import java.util.List;
-import java.util.function.Predicate;
 
 @State(
         name = "Jenkins.Settings",
@@ -103,29 +97,6 @@ public class JenkinsSettings implements PersistentStateComponent<JenkinsSettings
         return new CredentialAttributes(JenkinsAppSettings.class.getName(), JENKINS_SETTINGS_PASSWORD_KEY);
     }
 
-    public void addFavorite(@NotNull List<Job> jobs) {
-        jobs.stream().map(JobUtil::createFavoriteJob).forEach(myState::addFavoriteJobs);
-    }
-
-    public boolean isFavoriteJob(@NotNull Job job) {
-        return myState.getFavoriteJobs().stream().anyMatch(favoriteJob -> JobUtil.isFavoriteJob(job, favoriteJob));
-    }
-
-    public void removeFavorite(@NotNull List<Job> selectedJobs) {
-        selectedJobs.forEach(jobToRemove -> myState.removeFavoriteJob(
-                favoriteJob -> JobUtil.isFavoriteJob(jobToRemove, favoriteJob))
-        );
-    }
-
-    @NotNull
-    public List<FavoriteJob> getFavoriteJobs() {
-        return myState.getFavoriteJobs();
-    }
-
-    public boolean isFavoriteViewEmpty() {
-        return myState.getFavoriteJobs().isEmpty();
-    }
-
     public String getLastSelectedView() {
         return myState.getLastSelectedView();
     }
@@ -144,14 +115,6 @@ public class JenkinsSettings implements PersistentStateComponent<JenkinsSettings
 
     public void setVersion(JenkinsVersion jenkinsVersion) {
         this.myState.setJenkinsVersion(jenkinsVersion);
-    }
-
-    public void clearFavoriteJobs() {
-        myState.clearFavoriteJobs();
-    }
-
-    public boolean hasFavoriteJobs() {
-        return !myState.getFavoriteJobs().isEmpty();
     }
 
     public int getConnectionTimeout() {
@@ -174,38 +137,9 @@ public class JenkinsSettings implements PersistentStateComponent<JenkinsSettings
 
         private String lastSelectedView;
 
-        private List<FavoriteJob> favoriteJobs = new LinkedList<>();
-
         private JenkinsVersion jenkinsVersion = JenkinsVersion.VERSION_1;
 
         private int connectionTimeout = DEFAULT_CONNECTION_TIMEOUT;
         private @NotNull String jenkinsUrl = RESET_STR_VALUE;
-
-        public void clearFavoriteJobs() {
-            favoriteJobs.clear();
-        }
-
-        public void addFavoriteJobs(FavoriteJob favoriteJob) {
-            favoriteJobs.add(favoriteJob);
-        }
-
-        public void removeFavoriteJob(Predicate<? super FavoriteJob> filter) {
-            favoriteJobs.removeIf(filter);
-        }
-    }
-
-    @AllArgsConstructor
-    @NoArgsConstructor
-    @Data
-    @Tag("favorite")
-    public static class FavoriteJob {
-
-        @Setter(value = AccessLevel.NONE)
-        @Attribute("name")
-        private String name;
-
-        @Setter(value = AccessLevel.NONE)
-        @Attribute("url")
-        private String url;
     }
 }
