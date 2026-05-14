@@ -137,4 +137,5 @@ public interface JenkinsTreeNode extends NodeDescriptorProvidingKey, NavigationI
             return Optional.of(jenkins.getNameToRender());
         }
     }
+
 }

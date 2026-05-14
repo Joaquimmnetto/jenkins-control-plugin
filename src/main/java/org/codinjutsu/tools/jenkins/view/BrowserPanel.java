@@ -82,8 +82,8 @@ public final class BrowserPanel extends SimpleToolWindowPanel implements Persist
     private JPanel jobPanel;
     private boolean sortedByBuildStatus;
     private ScheduledFuture<?> refreshViewFutureTask;
-    @Nullable
-    private View currentSelectedView;
+    @NotNull
+    private TreeRoot treeRoot = new TreeRoot.JenkinsRoot(null);
 
     public BrowserPanel(@NotNull Project project) {
         super(true);
@@ -204,7 +204,7 @@ public final class BrowserPanel extends SimpleToolWindowPanel implements Persist
     }
 
     public @Nullable View getCurrentSelectedView() {
-        return currentSelectedView;
+        return treeRoot.getView();
     }
 
     @NotNull
@@ -261,7 +261,7 @@ public final class BrowserPanel extends SimpleToolWindowPanel implements Persist
     }
 
     public void handleEmptyConfiguration() {
-        currentSelectedView = null;
+        treeRoot = new TreeRoot.JenkinsRoot(null);
         setJobsUnavailable();
     }
 
@@ -295,6 +295,7 @@ public final class BrowserPanel extends SimpleToolWindowPanel implements Persist
         DefaultActionGroup actionGroup = new DefaultActionGroup("JenkinsToolbarGroup", false);
         actionGroup.add(new SelectViewAction(this));
         actionGroup.add(new RefreshNodeAction(this));
+        actionGroup.add(new ResetFocusAction(this));
         actionGroup.add(actionManager.getAction(LoadBuildsAction.ACTION_ID));
         actionGroup.add(actionManager.getAction(RunBuildAction.ACTION_ID));
         actionGroup.add(actionManager.getAction(StopBuildAction.ACTION_ID));
@@ -321,6 +322,8 @@ public final class BrowserPanel extends SimpleToolWindowPanel implements Persist
         popupGroup.add(new ShowLogAction(BuildType.LAST_FAILED));
         popupGroup.add(new ShowBuildLogAction());
         popupGroup.addSeparator();
+        popupGroup.add(new FocusOnItemAction(this));
+        popupGroup.addSeparator();
         popupGroup.add(new GotoServerAction(this));
         popupGroup.add(new GotoJobPageAction(this));
         popupGroup.add(new GotoBuildPageAction(this));
@@ -332,7 +335,7 @@ public final class BrowserPanel extends SimpleToolWindowPanel implements Persist
     }
 
     public void loadView(final View view) {
-        this.currentSelectedView = view;
+        this.treeRoot = new TreeRoot.JenkinsRoot(view);
         if (!SwingUtilities.isEventDispatchThread()) {
             logger.warn("BrowserPanel.loadView called from outside EDT");
         }
@@ -348,6 +351,20 @@ public final class BrowserPanel extends SimpleToolWindowPanel implements Persist
 
     public boolean isConfigured() {
         return jenkinsAppSettings.isServerUrlSet();
+    }
+
+    public void focusOnJob(@NotNull Job job) {
+        this.treeRoot = new TreeRoot.JobRoot(job, treeRoot.getView());
+        refreshViewJob.run();
+    }
+
+    public void clearFocusedJob() {
+        this.treeRoot = new TreeRoot.JenkinsRoot(treeRoot.getView());
+        refreshViewJob.run();
+    }
+
+    public boolean isFocused() {
+        return !treeRoot.isAtGlobalRoot();
     }
 
     public void updateWorkspace(Jenkins jenkinsWorkspace) {
@@ -389,15 +406,20 @@ public final class BrowserPanel extends SimpleToolWindowPanel implements Persist
         public void run(@NotNull RequestManagerInterface requestManager) {
             try {
                 setTreeBusy(true);
-                View viewToLoad = getViewToLoad();
-                if (viewToLoad == null) {
-                    return;
-                }
-                currentSelectedView = viewToLoad;
+                if (!resolveViewRoot()) return;
                 loadJobs();
             } finally {
                 setTreeBusy(false);
             }
+        }
+
+        private boolean resolveViewRoot() {
+            if (treeRoot instanceof TreeRoot.JenkinsRoot jr && jr.view() == null) {
+                View primaryView = jenkins.getPrimaryView();
+                if (primaryView == null) return false;
+                treeRoot = new TreeRoot.JenkinsRoot(primaryView);
+            }
+            return true;
         }
 
         @Override
@@ -409,30 +431,22 @@ public final class BrowserPanel extends SimpleToolWindowPanel implements Persist
             if (SwingUtilities.isEventDispatchThread()) {
                 logger.warn("BrowserPanel.loadJobs called from EDT");
             }
-            final List<Job> jobList;
-            final View viewToLoadJobs = currentSelectedView;
-            jobList = requestManager.loadJenkinsView(viewToLoadJobs);
+            final List<Job> jobs = treeRoot.loadJobs(requestManager);
             if (jenkinsAppSettings.isAutoLoadBuilds()) {
-                for (Job job : jobList) {
+                for (Job job : jobs) {
                     job.setLastBuilds(requestManager.loadBuilds(job));
                 }
             }
-            jenkinsSettings.setLastSelectedView(viewToLoadJobs.getName());
-            jenkins.setJobs(jobList);
-        }
-
-        @Nullable
-        private View getViewToLoad() {
-            if (currentSelectedView == null) {
-                return jenkins.getPrimaryView();
+            if (treeRoot instanceof TreeRoot.JenkinsRoot jr && jr.view() != null) {
+                jenkinsSettings.setLastSelectedView(jr.view().getName());
             }
-            return currentSelectedView;
+            jenkins.setJobs(jobs);
         }
 
         private void fillJobTree() {
             final List<Job> jobList = jenkins.getJobs();
             jobTree.keepLastState(() -> {
-                jobTree.setJobs(jobList);
+                treeRoot.applyToTree(jobTree, jobList);
                 jobTree.sortJobs(getCurrentSorting());
             });
         }
@@ -443,6 +457,61 @@ public final class BrowserPanel extends SimpleToolWindowPanel implements Persist
 
         public void queue() {
             task.queue();
+        }
+    }
+
+    private sealed interface TreeRoot {
+
+        @NotNull List<Job> loadJobs(@NotNull RequestManagerInterface rm);
+
+        void applyToTree(@NotNull JenkinsTree tree, @NotNull List<Job> jobs);
+
+        @Nullable View getView();
+
+        boolean isAtGlobalRoot();
+
+        record JenkinsRoot(@Nullable View view) implements TreeRoot {
+            @Override
+            public @NotNull List<Job> loadJobs(@NotNull RequestManagerInterface rm) {
+                return rm.loadJenkinsView(view);
+            }
+
+            @Override
+            public void applyToTree(@NotNull JenkinsTree tree, @NotNull List<Job> jobs) {
+                tree.setJobs(jobs);
+            }
+
+            @Override
+            public @Nullable View getView() {
+                return view;
+            }
+
+            @Override
+            public boolean isAtGlobalRoot() {
+                return true;
+            }
+        }
+
+        record JobRoot(@NotNull Job job, @Nullable View parentView) implements TreeRoot {
+            @Override
+            public @NotNull List<Job> loadJobs(@NotNull RequestManagerInterface rm) {
+                return rm.loadChildJobs(job);
+            }
+
+            @Override
+            public void applyToTree(@NotNull JenkinsTree tree, @NotNull List<Job> jobs) {
+                tree.setFocusedJob(job, jobs);
+            }
+
+            @Override
+            public @Nullable View getView() {
+                return parentView;
+            }
+
+            @Override
+            public boolean isAtGlobalRoot() {
+                return false;
+            }
         }
     }
 }
