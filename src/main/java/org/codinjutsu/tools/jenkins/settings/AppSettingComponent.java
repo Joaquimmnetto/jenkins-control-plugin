@@ -1,11 +1,8 @@
 package org.codinjutsu.tools.jenkins.settings;
 
 import com.intellij.openapi.ui.ComboBox;
-import com.intellij.ui.IdeBorderFactory;
 import com.intellij.ui.JBIntSpinner;
 import com.intellij.ui.components.JBCheckBox;
-import com.intellij.ui.components.JBLabel;
-import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.FormBuilder;
 import com.intellij.util.ui.JBDimension;
 import com.intellij.util.ui.JBUI;
@@ -36,7 +33,6 @@ public class AppSettingComponent implements FormValidationPanel {
     private final JBCheckBox useGreenColor = new JBCheckBox(JenkinsControlBundle.message("settings.app.useGreenColor"));
     private final JBCheckBox autoLoadBuildsOnFirstLevel = new JBCheckBox(JenkinsControlBundle.message("settings.app.autoLoadBuilds"));
     private final JBCheckBox showLogIfTriggerBuild = new JBCheckBox(JenkinsControlBundle.message("settings.app.showLogOnTrigger"));
-    private final JBTextField replaceWithSuffix = new JBTextField();
 
     private final JPanel mainPanel;
 
@@ -56,7 +52,6 @@ public class AppSettingComponent implements FormValidationPanel {
                 .addComponent(useGreenColor)
                 .addComponent(autoLoadBuildsOnFirstLevel)
                 .addComponent(showLogIfTriggerBuild)
-                .addComponent(createUploadPatchPanel())
                 .addComponentFillVertically(new JPanel(), 0)
                 .getPanel();
     }
@@ -77,16 +72,6 @@ public class AppSettingComponent implements FormValidationPanel {
         return mainPanel;
     }
 
-    private @NotNull JPanel createUploadPatchPanel() {
-        final var uploadPatchSettingsPanel = FormBuilder.createFormBuilder()
-                .addLabeledComponent(JenkinsControlBundle.message("settings.app.uploadPatch.label"), replaceWithSuffix)
-                .addComponentToRightColumn(new JBLabel(JenkinsControlBundle.message("settings.app.uploadPatch.macros")))
-                .getPanel();
-        uploadPatchSettingsPanel.setBorder(IdeBorderFactory.createTitledBorder(
-                JenkinsControlBundle.message("settings.app.uploadPatch"), true));
-        return uploadPatchSettingsPanel;
-    }
-
     public JenkinsAppSettings getSetting() {
         final JenkinsAppSettings jenkinsAppSettings = new JenkinsAppSettings();
         jenkinsAppSettings.setDelay(buildDelay.getNumber());
@@ -94,7 +79,6 @@ public class AppSettingComponent implements FormValidationPanel {
         jenkinsAppSettings.setNumBuildRetries(numBuildRetries.getNumber());
         jenkinsAppSettings.setBuildsToLoadPerJob(buildsToLoadPerJob.getNumber());
 
-        jenkinsAppSettings.setSuffix(replaceWithSuffix.getText());
         jenkinsAppSettings.setUseGreenColor(useGreenColor.isSelected());
         jenkinsAppSettings.setAutoLoadBuilds(autoLoadBuildsOnFirstLevel.isSelected());
         jenkinsAppSettings.setDoubleClickAction(doubleClickAction.getItem());
@@ -116,10 +100,6 @@ public class AppSettingComponent implements FormValidationPanel {
 
     public void setBuildsToLoadPerJob(int buildsToLoadPerJob) {
         this.buildsToLoadPerJob.setNumber(buildsToLoadPerJob);
-    }
-
-    public void setReplaceWithSuffix(String suffix) {
-        this.replaceWithSuffix.setText(suffix);
     }
 
     public void setDoubleClickAction(DoubleClickAction doubleClickAction) {

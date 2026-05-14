@@ -97,14 +97,6 @@ public class JenkinsAppSettings implements PersistentStateComponent<JenkinsAppSe
         myState.setJobRefreshPeriod(jobRefreshPeriod);
     }
 
-    public String getSuffix() {
-        return myState.getSuffix();
-    }
-
-    public void setSuffix(String suffix) {
-        myState.setSuffix(suffix);
-    }
-
     public int getNumBuildRetries() {
         return myState.getNumBuildRetries();
     }
@@ -160,7 +152,6 @@ public class JenkinsAppSettings implements PersistentStateComponent<JenkinsAppSe
         private String serverUrl = DUMMY_JENKINS_SERVER_URL;
         private int delay = DEFAULT_BUILD_DELAY;
         private int jobRefreshPeriod = RESET_PERIOD_VALUE;
-        private String suffix = "";
 
         private int numBuildRetries = DEFAULT_BUILD_RETRY;
         private int buildsToLoadPerJob = DEFAULT_JOBS_PER_BUILD;

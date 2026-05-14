@@ -74,8 +74,7 @@ public class JenkinsComponent implements SearchableConfigurable {
                 || isUseGreenColor
                 || isAutoLoadBuilds
                 || isDoubleClickActionChanged
-                || isShowLogIfTriggerBuildChanged
-                || (!jenkinsAppSettings.getSuffix().equals(appSettingsFromUi.getSuffix()));
+                || isShowLogIfTriggerBuildChanged;
     }
 
     @Override
@@ -108,7 +107,6 @@ public class JenkinsComponent implements SearchableConfigurable {
         jenkinsAppSettings.setJobRefreshPeriod(jenkinsAppSettingsFromUi.getJobRefreshPeriod());
         jenkinsAppSettings.setNumBuildRetries(jenkinsAppSettingsFromUi.getNumBuildRetries());
         jenkinsAppSettings.setBuildsToLoadPerJob(jenkinsAppSettingsFromUi.getBuildsToLoadPerJob());
-        jenkinsAppSettings.setSuffix(jenkinsAppSettingsFromUi.getSuffix());
         jenkinsAppSettings.setUseGreenColor(jenkinsAppSettingsFromUi.isUseGreenColor());
         jenkinsAppSettings.setAutoLoadBuilds(jenkinsAppSettingsFromUi.isAutoLoadBuilds());
         jenkinsAppSettings.setDoubleClickAction(jenkinsAppSettingsFromUi.getDoubleClickAction());
@@ -136,7 +134,6 @@ public class JenkinsComponent implements SearchableConfigurable {
         appSettingComponentToReset.setUseGreenColor(jenkinsAppSettings.isUseGreenColor());
         appSettingComponentToReset.setAutoLoadBuilds(jenkinsAppSettings.isAutoLoadBuilds());
         appSettingComponentToReset.setShowLogIfTriggerBuild(jenkinsAppSettings.isShowLogIfTriggerBuild());
-        appSettingComponentToReset.setReplaceWithSuffix(jenkinsAppSettings.getSuffix());
     }
 
     @NotNull

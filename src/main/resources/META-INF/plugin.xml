@@ -10,7 +10,6 @@
     <idea-version since-build="232.8660"/>
 
     <depends>com.intellij.modules.platform</depends>
-    <depends optional="true" config-file="org.codinjutsu.tools.jenkins-VcsSupport.xml">com.intellij.modules.vcs</depends>
     <depends optional="true" config-file="org.codinjutsu.tools.jenkins-LangSupport.xml">com.intellij.modules.lang</depends>
     <depends optional="true" config-file="org.codinjutsu.tools.jenkins-JavaSupport.xml">com.intellij.java</depends>
     <xi:include href="/META-INF/org.codinjutsu.tools.jenkins-JobParameterRenderer.xml" xpointer="xpointer(/idea-plugin/*)"/>
