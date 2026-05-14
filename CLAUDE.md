@@ -13,7 +13,7 @@ jobs, trigger builds, monitor build status, and view logs without leaving the ID
 ./gradlew buildPlugin          # Build the plugin ZIP (output: build/distributions/)
 ./gradlew test                 # Run all unit tests
 ./gradlew check                # Run all checks (tests + verifications)
-./gradlew runIdea              # Launch IntelliJ with the plugin loaded for manual testing
+./gradlew runIde               # Launch IntelliJ with the plugin loaded for manual testing
 ./gradlew verifyPlugin         # Validate plugin structure and API compatibility
 ./gradlew jacocoTestReport     # Generate test coverage report
 
