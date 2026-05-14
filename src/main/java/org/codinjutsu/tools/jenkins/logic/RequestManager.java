@@ -117,7 +117,7 @@ public class RequestManager implements RequestManagerInterface, Disposable {
         } else {
             jobsFromView = jenkinsParser.createCloudbeesViewJobs(jenkinsViewData);
         }
-        return withNestedJobs(jobsFromView);
+return withNestedJobs(jobsFromView);
     }
 
     @NotNull
@@ -323,6 +323,12 @@ public class RequestManager implements RequestManagerInterface, Disposable {
     @Override
     public List<Job> loadJenkinsView(@NotNull View view) {
         return loadJenkinsView(view.getUrl());
+    }
+
+    @NotNull
+    @Override
+    public List<Job> loadChildJobs(@NotNull Job job) {
+        return withNestedJobs(loadNestedJobs(job.getUrl()));
     }
 
     @Override

@@ -41,6 +41,7 @@ public class JenkinsTree implements PersistentStateComponent<JenkinsTreeState> {
     private static final TreeState NO_TREE_STATE = null;
     private static final Logger LOG = Logger.getInstance(JenkinsTree.class);
     private final SimpleTree tree;
+    private final Jenkins jenkins;
     @NotNull
     private JenkinsTreeState state = new JenkinsTreeState();
     @Nullable
@@ -49,6 +50,7 @@ public class JenkinsTree implements PersistentStateComponent<JenkinsTreeState> {
     private JobClickHandler clickHandler;
 
     public JenkinsTree(Project project, @NotNull JenkinsSettings jenkinsSettings, Jenkins jenkins) {
+        this.jenkins = jenkins;
         this.tree = new TreeWithoutDefaultSearch(this::getSelectedPathComponents);
 
         this.tree.getEmptyText().setText(LOADING);
@@ -184,12 +186,26 @@ public class JenkinsTree implements PersistentStateComponent<JenkinsTreeState> {
     }
 
     public void setJobs(@NotNull final Collection<Job> jobs) {
+        final DefaultMutableTreeNode currentRoot = getModelRoot();
+        if (currentRoot != null &&
+                currentRoot.getUserObject() instanceof JenkinsTreeNode.JobNode) {
+            getModel().setRoot(
+                    new DefaultMutableTreeNode(new JenkinsTreeNode.RootNode(jenkins), false));
+        }
         Optional.ofNullable(getModelRoot()).ifPresent(rootNode -> setJobs(jobs, rootNode));
     }
 
     private void setJobs(@NotNull final Collection<Job> jobs, @NotNull DefaultMutableTreeNode rootNode) {
         rootNode.removeAllChildren();
         jobs.stream().map(JenkinsTree::createJobTree).forEach(rootNode::add);
+        tree.setRootVisible(true);
+    }
+
+    public void setFocusedJob(@NotNull Job job, @NotNull Collection<Job> nestedJobs) {
+        final DefaultMutableTreeNode newRoot =
+                new DefaultMutableTreeNode(new JenkinsTreeNode.JobNode(job), true);
+        nestedJobs.stream().map(JenkinsTree::createJobTree).forEach(newRoot::add);
+        getModel().setRoot(newRoot);
         tree.setRootVisible(true);
     }
 
