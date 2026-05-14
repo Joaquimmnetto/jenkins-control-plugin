@@ -326,7 +326,6 @@ public final class BrowserPanel extends SimpleToolWindowPanel implements Persist
         popupGroup.add(new GotoBuildPageAction(this));
         popupGroup.add(new GotoBuildConsolePageAction(this));
         popupGroup.add(new GotoBuildTestResultsPageAction(this));
-        popupGroup.add(new GotoAllureReportPageAction(this));
         popupGroup.add(new GotoLastBuildPageAction(this));
 
         PopupHandler.installPopupMenu(jobTree.asComponent(), popupGroup, POPUP_PLACE);
