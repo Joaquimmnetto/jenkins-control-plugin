@@ -1,0 +1,13 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition">
+    <scm class="hudson.plugins.git.GitSCM">
+      <userRemoteConfigs>
+        <hudson.plugins.git.UserRemoteConfig>
+          <url>https://github.com/acme/widget.git</url>
+          <credentialsId>github-creds</credentialsId>
+        </hudson.plugins.git.UserRemoteConfig>
+      </userRemoteConfigs>
+    </scm>
+  </definition>
+</flow-definition>

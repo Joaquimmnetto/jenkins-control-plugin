@@ -30,6 +30,9 @@ import com.intellij.util.xmlb.annotations.Tag;
 import lombok.*;
 import org.codinjutsu.tools.jenkins.security.JenkinsVersion;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.VisibleForTesting;
+
+import java.util.function.Function;
 
 @State(
         name = "Jenkins.Settings",
@@ -40,7 +43,11 @@ import org.jetbrains.annotations.NotNull;
 public class JenkinsSettings implements PersistentStateComponent<JenkinsSettings.State> {
 
     public static final String JENKINS_SETTINGS_PASSWORD_KEY = "JENKINS_SETTINGS_PASSWORD_KEY";
+    public static final String JENKINS_SETTINGS_GITHUB_TOKEN_KEY = "JENKINS_SETTINGS_GITHUB_TOKEN_KEY";
+    public static final String DEFAULT_GITHUB_API_URL = "https://api.github.com";
+
     private State myState = new State();
+    private Function<String, String> envLookup = System::getenv;
 
     public static JenkinsSettings getSafeInstance(Project project) {
         JenkinsSettings settings = project.getService(JenkinsSettings.class);
@@ -97,6 +104,49 @@ public class JenkinsSettings implements PersistentStateComponent<JenkinsSettings
         return new CredentialAttributes(JenkinsAppSettings.class.getName(), JENKINS_SETTINGS_PASSWORD_KEY);
     }
 
+    public @NotNull String getGithubToken() {
+        final String stored = PasswordSafe.getInstance().getPassword(getGithubTokenCredentialAttributes());
+        if (org.codinjutsu.tools.jenkins.util.StringUtil.isNotBlank(stored)) {
+            return stored;
+        }
+        final String gh = envLookup.apply("GH_TOKEN");
+        if (org.codinjutsu.tools.jenkins.util.StringUtil.isNotBlank(gh)) {
+            return gh;
+        }
+        final String github = envLookup.apply("GITHUB_TOKEN");
+        return org.codinjutsu.tools.jenkins.util.StringUtil.isNotBlank(github) ? github : "";
+    }
+
+    public boolean isGithubTokenStoredInSettings() {
+        return org.codinjutsu.tools.jenkins.util.StringUtil.isNotBlank(
+                PasswordSafe.getInstance().getPassword(getGithubTokenCredentialAttributes()));
+    }
+
+    public void setGithubToken(String githubToken) {
+        PasswordSafe.getInstance().setPassword(getGithubTokenCredentialAttributes(),
+                org.codinjutsu.tools.jenkins.util.StringUtil.isNotBlank(githubToken) ? githubToken : "");
+    }
+
+    @NotNull
+    private CredentialAttributes getGithubTokenCredentialAttributes() {
+        return new CredentialAttributes(JenkinsAppSettings.class.getName(), JENKINS_SETTINGS_GITHUB_TOKEN_KEY);
+    }
+
+    public @NotNull String getGithubApiUrl() {
+        return org.codinjutsu.tools.jenkins.util.StringUtil.isNotBlank(myState.getGithubApiUrl())
+                ? myState.getGithubApiUrl() : DEFAULT_GITHUB_API_URL;
+    }
+
+    public void setGithubApiUrl(String githubApiUrl) {
+        myState.setGithubApiUrl(org.codinjutsu.tools.jenkins.util.StringUtil.isNotBlank(githubApiUrl)
+                ? githubApiUrl : DEFAULT_GITHUB_API_URL);
+    }
+
+    @VisibleForTesting
+    void setEnvLookup(@NotNull Function<String, String> envLookup) {
+        this.envLookup = envLookup;
+    }
+
     public String getLastSelectedView() {
         return myState.getLastSelectedView();
     }
@@ -141,5 +191,6 @@ public class JenkinsSettings implements PersistentStateComponent<JenkinsSettings
 
         private int connectionTimeout = DEFAULT_CONNECTION_TIMEOUT;
         private @NotNull String jenkinsUrl = RESET_STR_VALUE;
+        private @NotNull String githubApiUrl = DEFAULT_GITHUB_API_URL;
     }
 }

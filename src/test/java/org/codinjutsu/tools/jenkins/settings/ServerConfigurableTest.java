@@ -119,6 +119,29 @@ public class ServerConfigurableTest {
         assertThat(modified).isTrue();
     }
 
+    @Test
+    public void isModifiedForGithubApiUrl() {
+        final var serverSetting = createServerSettingBuilder()
+                .githubApiUrl("https://github.example.com/api/v3")
+                .build();
+        final var modified = ServerConfigurable.isModified(serverSetting, jenkinsAppSettings, jenkinsSettings);
+        assertThat(modified).isTrue();
+    }
+
+    @Test
+    public void isModifiedForGithubToken() {
+        final var serverSetting = createServerSettingBuilder().githubTokenModified(true).build();
+        final var modified = ServerConfigurable.isModified(serverSetting, jenkinsAppSettings, jenkinsSettings);
+        assertThat(modified).isTrue();
+    }
+
+    @Test
+    public void isNotModifiedWhenGithubFieldsAreLeftBlank() {
+        final var serverSetting = createServerSettingBuilder().build();
+        final var modified = ServerConfigurable.isModified(serverSetting, jenkinsAppSettings, jenkinsSettings);
+        assertThat(modified).isFalse();
+    }
+
     private ServerSetting createServerSetting() {
         return createServerSettingBuilder().build();
     }
@@ -130,6 +153,8 @@ public class ServerConfigurableTest {
                 .username(jenkinsSettings.getUsername())
                 .apiToken(jenkinsSettings.getPassword())
                 .timeout(jenkinsSettings.getConnectionTimeout())
+                .githubApiUrl(jenkinsSettings.getGithubApiUrl())
+                .githubToken("")
                 ;
     }
 
@@ -142,6 +167,8 @@ public class ServerConfigurableTest {
                 .username("user")
                 .apiToken("newToken")
                 .timeout(13)
+                .githubApiUrl("https://api.github.com")
+                .githubToken("")
                 .build();
         serverComponent.setServerUrl(expectedServerSetting.getUrl());
         serverComponent.setJenkinsUrl(expectedServerSetting.getJenkinsUrl());

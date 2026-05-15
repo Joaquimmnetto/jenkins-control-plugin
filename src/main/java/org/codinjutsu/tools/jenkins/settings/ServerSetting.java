@@ -17,4 +17,8 @@ class ServerSetting {
     @Builder.Default
     private final boolean apiTokenModified = false;
     private final int timeout;
+    private final @Nullable String githubApiUrl;
+    private final @Nullable String githubToken;
+    @Builder.Default
+    private final boolean githubTokenModified = false;
 }
