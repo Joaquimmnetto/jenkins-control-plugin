@@ -37,6 +37,8 @@ public interface SecurityClient {
 
     @NotNull Response execute(URL url, @NotNull Collection<RequestData> data);
 
+    @NotNull Response executeGet(@NotNull URL url);
+
     @NotNull HttpContext getHttpClientContext();
 
     @NotNull CloseableHttpClient getHttpClient();

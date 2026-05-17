@@ -322,7 +322,7 @@ return withNestedJobs(jobsFromView);
     public @NotNull String loadJobConfigXml(@NotNull String jobUrl) {
         if (handleNotYetLoggedInState()) return "";
         final URL url = urlBuilder.createJobConfigXmlUrl(jobUrl);
-        return Optional.ofNullable(securityClient.execute(url)).orElse("");
+        return Optional.ofNullable(securityClient.executeGet(url).getData()).orElse("");
     }
 
     @NotNull

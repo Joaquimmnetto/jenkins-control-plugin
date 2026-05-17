@@ -30,6 +30,7 @@ import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.AuthCache;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
@@ -130,16 +131,23 @@ class DefaultSecurityClient implements SecurityClient {
     }
 
     public @NotNull Response execute(URL url, @NotNull Collection<RequestData> data) {
-        String urlStr = url.toString();
-
         final var responseCollector = new ResponseCollector();
-        runMethod(urlStr, data, responseCollector);
-
+        runRequest(createPost(url.toString(), data), responseCollector);
         if (isRedirection(responseCollector.statusCode)) {
             LOG.trace(String.format("Handle redirect to: %s", responseCollector.data));
-            runMethod(responseCollector.data, data, responseCollector);
+            runRequest(createPost(responseCollector.data, data), responseCollector);
         }
+        return new Response(responseCollector.statusCode, responseCollector.data, responseCollector.error);
+    }
 
+    @Override
+    public @NotNull Response executeGet(@NotNull URL url) {
+        final var responseCollector = new ResponseCollector();
+        runRequest(new HttpGet(url.toString()), responseCollector);
+        if (isRedirection(responseCollector.statusCode)) {
+            LOG.trace(String.format("Handle redirect to: %s", responseCollector.data));
+            runRequest(new HttpGet(responseCollector.data), responseCollector);
+        }
         return new Response(responseCollector.statusCode, responseCollector.data, responseCollector.error);
     }
 
@@ -219,19 +227,16 @@ class DefaultSecurityClient implements SecurityClient {
         }
     }
 
-    private void runMethod(String url, @NotNull Collection<RequestData> data, ResponseCollector responseCollector) {
-        final var post = createPost(url, data);
-
+    private void runRequest(HttpRequestBase request, ResponseCollector responseCollector) {
         try {
-            LOG.trace(String.format("Executing POST to: %s", post.getURI()));
-            final var response = executeHttp(post);
+            LOG.trace(String.format("Executing %s to: %s", request.getMethod(), request.getURI()));
+            final var response = executeHttp(request);
             final var statusCode = response.getStatusLine().getStatusCode();
             final var responseBody = EntityUtils.toString(response.getEntity());
             final var errorHeader = response.getFirstHeader("X-Error");
             checkResponse(statusCode, responseBody);
-            LOG.trace(String.format("POST response for [%s] with status [%s]: %s", post.getURI(), statusCode,
-                    responseBody));
-
+            LOG.trace(String.format("%s response for [%s] with status [%s]: %s", request.getMethod(),
+                    request.getURI(), statusCode, responseBody));
             if (HttpURLConnection.HTTP_OK == statusCode) {
                 responseCollector.collect(statusCode, responseBody);
             } else {
@@ -250,9 +255,9 @@ class DefaultSecurityClient implements SecurityClient {
             throw new ConfigurationException(String.format("Unknown server: %s", uhEx.getMessage()), uhEx);
         } catch (IOException ioEx) {
             throw new ConfigurationException(String.format("IO Error during method execution [%s] for URL '%s'",
-                    ioEx.getMessage(), createUrlForNotification(post)), ioEx);
+                    ioEx.getMessage(), createUrlForNotification(request)), ioEx);
         } finally {
-            post.releaseConnection();
+            request.releaseConnection();
         }
     }
 
