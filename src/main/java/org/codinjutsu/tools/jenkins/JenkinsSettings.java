@@ -28,6 +28,8 @@ import com.intellij.util.xmlb.XmlSerializerUtil;
 import com.intellij.util.xmlb.annotations.Attribute;
 import com.intellij.util.xmlb.annotations.Tag;
 import lombok.*;
+import org.codinjutsu.tools.jenkins.model.Job;
+import org.codinjutsu.tools.jenkins.model.JobType;
 import org.codinjutsu.tools.jenkins.security.JenkinsVersion;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.VisibleForTesting;
@@ -155,6 +157,42 @@ public class JenkinsSettings implements PersistentStateComponent<JenkinsSettings
         myState.setLastSelectedView(viewName);
     }
 
+    public boolean hasFocusedJob() {
+        return !StringUtil.isEmpty(myState.getFocusedJobUrl());
+    }
+
+    public void setFocusedJob(@NotNull String url, @NotNull String name,
+                              @NotNull String fullName, @NotNull String jobType) {
+        myState.setFocusedJobUrl(url);
+        myState.setFocusedJobName(name);
+        myState.setFocusedJobFullName(fullName);
+        myState.setFocusedJobType(jobType);
+    }
+
+    public void clearFocusedJob() {
+        myState.setFocusedJobUrl(null);
+        myState.setFocusedJobName(null);
+        myState.setFocusedJobFullName(null);
+        myState.setFocusedJobType(null);
+    }
+
+    @NotNull
+    public Job restoreFocusedJob() {
+        JobType jobType;
+        try {
+            jobType = myState.getFocusedJobType() != null
+                    ? JobType.valueOf(myState.getFocusedJobType()) : JobType.FOLDER;
+        } catch (IllegalArgumentException e) {
+            jobType = JobType.FOLDER;
+        }
+        return Job.builder()
+                .name(myState.getFocusedJobName())
+                .fullName(myState.getFocusedJobFullName())
+                .url(myState.getFocusedJobUrl())
+                .jobType(jobType)
+                .build();
+    }
+
     public boolean isSecurityMode() {
         return org.codinjutsu.tools.jenkins.util.StringUtil.isNotBlank(getUsername());
     }
@@ -186,6 +224,11 @@ public class JenkinsSettings implements PersistentStateComponent<JenkinsSettings
         private String crumbData = RESET_STR_VALUE;
 
         private String lastSelectedView;
+
+        private String focusedJobUrl;
+        private String focusedJobName;
+        private String focusedJobFullName;
+        private String focusedJobType;
 
         private JenkinsVersion jenkinsVersion = JenkinsVersion.VERSION_1;
 
