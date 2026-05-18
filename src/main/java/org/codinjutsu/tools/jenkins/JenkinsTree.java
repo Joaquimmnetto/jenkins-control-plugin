@@ -120,11 +120,22 @@ public class JenkinsTree implements PersistentStateComponent<JenkinsTreeState> {
     public static DefaultMutableTreeNode fillJobTree(@NotNull Job job, @NotNull DefaultMutableTreeNode jobNode) {
         jobNode.removeAllChildren();
         if (job.getJobType().containNestedJobs()) {
-            job.getNestedJobs().stream().map(JenkinsTree::createJobTree).forEach(jobNode::add);
+            if (!job.isChildrenLoaded()) {
+                jobNode.add(new DefaultMutableTreeNode(new JenkinsTreeNode.LoadingNode(), false));
+            } else {
+                job.getNestedJobs().stream().map(JenkinsTree::createJobTree).forEach(jobNode::add);
+            }
         } else {
             job.getLastBuilds().stream().map(JenkinsTree::initBuildNode).forEach(jobNode::add);
         }
         return jobNode;
+    }
+
+    public void updateFolderChildren(@NotNull Job folder, @NotNull DefaultMutableTreeNode node) {
+        keepLastState(() -> {
+            fillJobTree(folder, node);
+            getModel().nodeStructureChanged(node);
+        });
     }
 
     @NotNull

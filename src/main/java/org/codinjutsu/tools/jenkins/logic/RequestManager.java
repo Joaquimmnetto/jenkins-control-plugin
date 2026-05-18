@@ -182,7 +182,8 @@ return withNestedJobs(jobsFromView);
 
     @NotNull
     private Job withNestedJobs(@NotNull Job job) {
-        job.setNestedJobs(withNestedJobs(loadNestedJobs(job.getUrl())));
+        job.setNestedJobs(withNodeParameterFix(loadNestedJobs(job.getUrl())));
+        job.setChildrenLoaded(true);
         return job;
     }
 

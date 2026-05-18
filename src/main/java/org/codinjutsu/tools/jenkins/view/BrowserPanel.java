@@ -42,6 +42,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import javax.swing.event.TreeExpansionEvent;
+import javax.swing.event.TreeWillExpandListener;
+import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 import java.awt.*;
 import java.util.ArrayList;
@@ -104,6 +107,21 @@ public final class BrowserPanel extends SimpleToolWindowPanel implements Persist
 
         jobPanel.setLayout(new BorderLayout());
         jobPanel.add(ScrollPaneFactory.createScrollPane(jobTree.asComponent()), BorderLayout.CENTER);
+
+        jobTree.getTree().addTreeWillExpandListener(new TreeWillExpandListener() {
+            @Override
+            public void treeWillExpand(TreeExpansionEvent event) {
+                DefaultMutableTreeNode node =
+                        (DefaultMutableTreeNode) event.getPath().getLastPathComponent();
+                JenkinsTree.getJob(event.getPath())
+                        .filter(job -> job.getJobType().containNestedJobs())
+                        .filter(job -> !job.isChildrenLoaded())
+                        .ifPresent(job -> lazyLoadFolder(job, node));
+            }
+
+            @Override
+            public void treeWillCollapse(TreeExpansionEvent event) {}
+        });
 
         setContent(rootPanel);
     }
@@ -373,6 +391,27 @@ public final class BrowserPanel extends SimpleToolWindowPanel implements Persist
 
     public boolean isFocused() {
         return !treeRoot.isAtGlobalRoot();
+    }
+
+    private void lazyLoadFolder(@NotNull Job folder, @NotNull DefaultMutableTreeNode node) {
+        JenkinsBackgroundTaskFactory.getInstance(project).createBackgroundTask(
+                "Loading children", true, new JenkinsBackgroundTask.JenkinsTask() {
+                    private List<Job> children;
+
+                    @Override
+                    public void run(@NotNull RequestManagerInterface rm) {
+                        children = rm.loadChildJobs(folder);
+                    }
+
+                    @Override
+                    public void onSuccess() {
+                        GuiUtil.runInSwingThread(() -> {
+                            folder.setNestedJobs(children);
+                            folder.setChildrenLoaded(true);
+                            jobTree.updateFolderChildren(folder, node);
+                        });
+                    }
+                }).queue();
     }
 
     public void updateWorkspace(Jenkins jenkinsWorkspace) {

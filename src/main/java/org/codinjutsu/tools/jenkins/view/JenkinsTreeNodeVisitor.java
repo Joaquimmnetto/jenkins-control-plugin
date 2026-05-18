@@ -9,4 +9,6 @@ public interface JenkinsTreeNodeVisitor {
     void visit(JenkinsTreeNode.JobNode job);
 
     void visit(JenkinsTreeNode.BuildParameterNode buildParameterNode);
+
+    default void visit(JenkinsTreeNode.LoadingNode loadingNode) {}
 }

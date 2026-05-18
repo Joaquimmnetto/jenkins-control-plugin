@@ -119,6 +119,19 @@ public interface JenkinsTreeNode extends NodeDescriptorProvidingKey, NavigationI
         }
     }
 
+    record LoadingNode() implements JenkinsTreeNode {
+        @NotNull
+        @Override
+        public String getUrl() {
+            return "";
+        }
+
+        @Override
+        public void render(JenkinsTreeNodeVisitor v) {
+            v.visit(this);
+        }
+    }
+
     record RootNode(Jenkins jenkins) implements JenkinsTreeNode {
 
         @NotNull
