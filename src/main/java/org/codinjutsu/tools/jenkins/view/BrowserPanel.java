@@ -44,6 +44,7 @@ import org.jetbrains.annotations.Nullable;
 import javax.swing.*;
 import javax.swing.tree.TreePath;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -276,13 +277,16 @@ public final class BrowserPanel extends SimpleToolWindowPanel implements Persist
 
     public void postAuthenticationInitialization() {
         String lastSelectedViewName = jenkinsSettings.getLastSelectedView();
-        View viewToLoad;
-        if (StringUtil.isEmpty(lastSelectedViewName)) {
-            viewToLoad = jenkins.getPrimaryView();
+        View view = StringUtil.isEmpty(lastSelectedViewName)
+                ? jenkins.getPrimaryView()
+                : jenkins.getViewByName(lastSelectedViewName);
+
+        if (jenkinsSettings.hasFocusedJob()) {
+            this.treeRoot = new TreeRoot.JobRoot(jenkinsSettings.restoreFocusedJob(), view);
+            refreshViewJob.run();
         } else {
-            viewToLoad = jenkins.getViewByName(lastSelectedViewName);
+            loadView(view);
         }
-        loadView(viewToLoad);
     }
 
     public void initGui() {
@@ -357,11 +361,13 @@ public final class BrowserPanel extends SimpleToolWindowPanel implements Persist
 
     public void focusOnJob(@NotNull Job job) {
         this.treeRoot = new TreeRoot.JobRoot(job, treeRoot.getView());
+        jenkinsSettings.setFocusedJob(job.getUrl(), job.getName(), job.getFullName(), job.getJobType().name());
         refreshViewJob.run();
     }
 
     public void clearFocusedJob() {
         this.treeRoot = new TreeRoot.JenkinsRoot(treeRoot.getView());
+        jenkinsSettings.clearFocusedJob();
         refreshViewJob.run();
     }
 
@@ -475,6 +481,9 @@ public final class BrowserPanel extends SimpleToolWindowPanel implements Persist
         record JenkinsRoot(@Nullable View view) implements TreeRoot {
             @Override
             public @NotNull List<Job> loadJobs(@NotNull RequestManagerInterface rm) {
+                if(view == null) {
+                    return new ArrayList<>();
+                }
                 return rm.loadJenkinsView(view);
             }
 
