@@ -72,6 +72,11 @@ public class JenkinsTreeRenderer extends ColoredTreeCellRenderer {
             public void visit(JenkinsTreeNode.BuildParameterNode buildParameterNode) {
                 JenkinsTreeRenderer.this.render(buildParameterNode);
             }
+
+            @Override
+            public void visit(JenkinsTreeNode.LoadingNode loadingNode) {
+                append("Loading…", SimpleTextAttributes.GRAYED_ATTRIBUTES);
+            }
         });
     }
 

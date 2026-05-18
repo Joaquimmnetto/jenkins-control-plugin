@@ -85,6 +85,7 @@ public class Job {
     @Builder.Default
     @NotNull
     private List<Job> nestedJobs = new LinkedList<>();
+    private boolean childrenLoaded;
     @Builder.Default
     @NotNull
     private EnumSet<BuildType> availableBuildTypes = EnumSet.noneOf(BuildType.class);

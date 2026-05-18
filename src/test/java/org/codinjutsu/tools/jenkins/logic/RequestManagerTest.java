@@ -31,6 +31,7 @@ import org.codinjutsu.tools.jenkins.model.BuildType;
 import org.codinjutsu.tools.jenkins.model.Computer;
 import org.codinjutsu.tools.jenkins.model.Jenkins;
 import org.codinjutsu.tools.jenkins.model.Job;
+import org.codinjutsu.tools.jenkins.model.JobType;
 import org.codinjutsu.tools.jenkins.security.SecurityClient;
 import org.codinjutsu.tools.jenkins.util.IOUtils;
 import org.codinjutsu.tools.jenkins.util.MockUtil;
@@ -245,6 +246,67 @@ public class RequestManagerTest {
             Assertions.fail(e.getMessage());
         }
         return job;
+    }
+
+    @Test
+    public void loadChildJobsSetsChildrenLoadedOnDirectFolderChildren() throws Exception {
+        URL folderNestedUrl = new URL("http://jenkins/job/my-folder/nested");
+        URL subFolderNestedUrl = new URL("http://jenkins/job/my-folder/sub-folder/nested");
+
+        when(urlBuilderMock.createNestedJobUrl("http://jenkins/job/my-folder/"))
+                .thenReturn(folderNestedUrl);
+        when(urlBuilderMock.createNestedJobUrl("http://jenkins/job/my-folder/sub-folder/"))
+                .thenReturn(subFolderNestedUrl);
+
+        when(securityClientMock.execute(folderNestedUrl)).thenReturn(
+                "{\"jobs\":[{\"_class\":\"com.cloudbees.hudson.plugins.folder.Folder\"," +
+                "\"name\":\"sub-folder\",\"fullName\":\"my-folder/sub-folder\"," +
+                "\"url\":\"http://jenkins/job/my-folder/sub-folder/\"," +
+                "\"buildable\":false,\"inQueue\":false,\"jobs\":[]}]}");
+        when(securityClientMock.execute(subFolderNestedUrl)).thenReturn("{\"jobs\":[]}");
+
+        Job folder = Job.builder().name("my-folder").fullName("my-folder")
+                .url("http://jenkins/job/my-folder/").jobType(JobType.FOLDER).build();
+
+        List<Job> children = requestManager.loadChildJobs(folder);
+
+        assertThat(children).hasSize(1);
+        assertThat(children.get(0).isChildrenLoaded()).isTrue();
+    }
+
+    @Test
+    public void loadChildJobsDoesNotRecurseBeyondImmediateChildren() throws Exception {
+        URL folderNestedUrl = new URL("http://jenkins/job/my-folder/nested");
+        URL subFolderNestedUrl = new URL("http://jenkins/job/my-folder/sub-folder/nested");
+        URL deepFolderNestedUrl = new URL("http://jenkins/job/my-folder/sub-folder/deep-folder/nested");
+
+        when(urlBuilderMock.createNestedJobUrl("http://jenkins/job/my-folder/"))
+                .thenReturn(folderNestedUrl);
+        when(urlBuilderMock.createNestedJobUrl("http://jenkins/job/my-folder/sub-folder/"))
+                .thenReturn(subFolderNestedUrl);
+
+        when(securityClientMock.execute(folderNestedUrl)).thenReturn(
+                "{\"jobs\":[{\"_class\":\"com.cloudbees.hudson.plugins.folder.Folder\"," +
+                "\"name\":\"sub-folder\",\"fullName\":\"my-folder/sub-folder\"," +
+                "\"url\":\"http://jenkins/job/my-folder/sub-folder/\"," +
+                "\"buildable\":false,\"inQueue\":false,\"jobs\":[]}]}");
+        when(securityClientMock.execute(subFolderNestedUrl)).thenReturn(
+                "{\"jobs\":[{\"_class\":\"com.cloudbees.hudson.plugins.folder.Folder\"," +
+                "\"name\":\"deep-folder\",\"fullName\":\"my-folder/sub-folder/deep-folder\"," +
+                "\"url\":\"http://jenkins/job/my-folder/sub-folder/deep-folder/\"," +
+                "\"buildable\":false,\"inQueue\":false,\"jobs\":[]}]}");
+
+        Job folder = Job.builder().name("my-folder").fullName("my-folder")
+                .url("http://jenkins/job/my-folder/").jobType(JobType.FOLDER).build();
+
+        List<Job> children = requestManager.loadChildJobs(folder);
+
+        Job subFolder = children.get(0);
+        assertThat(subFolder.isChildrenLoaded()).isTrue();
+
+        Job deepFolder = subFolder.getNestedJobs().get(0);
+        assertThat(deepFolder.isChildrenLoaded()).isFalse();
+        verify(securityClientMock, never()).execute(deepFolderNestedUrl);
     }
 
     @After
