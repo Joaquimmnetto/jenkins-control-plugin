@@ -8,20 +8,15 @@ import org.codinjutsu.tools.jenkins.model.JobType;
 import org.codinjutsu.tools.jenkins.util.CollectionUtil;
 import org.codinjutsu.tools.jenkins.util.StringUtil;
 import org.codinjutsu.tools.jenkins.view.BrowserPanel;
+import com.intellij.openapi.util.JDOMUtil;
+import org.jdom.Element;
 import org.jetbrains.annotations.NotNull;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
+import org.jetbrains.annotations.Nullable;
 
-import javax.xml.XMLConstants;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.StringReader;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -115,51 +110,61 @@ public class JenkinsJobMatcher {
     static @NotNull Optional<LocalGitContext.OwnerRepo> extractOwnerRepoFromConfigXml(@NotNull String xml,
                                                                                      @NotNull Set<String> ghHosts) {
         if (StringUtil.isBlank(xml)) return Optional.empty();
-        final Document doc;
+        final Element root;
         try {
-            doc = newSafeBuilder().parse(new InputSource(new StringReader(xml)));
+            root = JDOMUtil.load(new StringReader(xml));
         } catch (Exception e) {
             LOG.debug("Could not parse config.xml: " + e.getMessage());
             return Optional.empty();
         }
-        return firstFromGitHubSCMSource(doc)
-                .or(() -> firstFromAnyUrlText(doc, ghHosts));
+        return firstFromGitHubSCMSource(root, ghHosts)
+                .or(() -> firstFromAnyUrlText(root, ghHosts));
     }
 
-    private static @NotNull Optional<LocalGitContext.OwnerRepo> firstFromGitHubSCMSource(@NotNull Document doc) {
-        final NodeList owners = doc.getElementsByTagName("repoOwner");
-        final NodeList repos = doc.getElementsByTagName("repository");
-        if (owners.getLength() == 0 || repos.getLength() == 0) return Optional.empty();
-        final String owner = textOf(owners.item(0));
-        final String repo = textOf(repos.item(0));
+    private static @NotNull Optional<LocalGitContext.OwnerRepo> firstFromGitHubSCMSource(
+            @NotNull Element root, @NotNull Set<String> ghHosts) {
+        final String owner = firstDescendantText(root, "repoOwner");
+        final String repo = firstDescendantText(root, "repository");
         if (StringUtil.isBlank(owner) || StringUtil.isBlank(repo)) return Optional.empty();
-        return Optional.of(new LocalGitContext.OwnerRepo(owner.trim(), repo.trim()));
+        final String apiUri = firstDescendantText(root, "apiUri");
+        if (StringUtil.isNotBlank(apiUri)) {
+            final Set<String> sourceHosts = LocalGitContext.hostsFor(apiUri);
+            if (sourceHosts.stream().noneMatch(ghHosts::contains)) return Optional.empty();
+        }
+        return Optional.of(new LocalGitContext.OwnerRepo(owner, repo));
     }
 
-    private static @NotNull Optional<LocalGitContext.OwnerRepo> firstFromAnyUrlText(@NotNull Document doc,
+    private static @NotNull Optional<LocalGitContext.OwnerRepo> firstFromAnyUrlText(@NotNull Element root,
                                                                                    @NotNull Set<String> ghHosts) {
-        for (String tag : List.of("url", "remote")) {
-            final NodeList nodes = doc.getElementsByTagName(tag);
-            for (int i = 0; i < nodes.getLength(); i++) {
-                final String candidate = textOf(nodes.item(i));
-                if (StringUtil.isBlank(candidate)) continue;
-                final Optional<LocalGitContext.OwnerRepo> parsed =
-                        LocalGitContext.parseOwnerRepo(candidate.trim(), ghHosts);
-                if (parsed.isPresent()) return parsed;
-            }
+        for (String tag : List.of("url", "remote", "repositoryUrl")) {
+            final Optional<LocalGitContext.OwnerRepo> found = firstUrlInDescendants(root, tag, ghHosts);
+            if (found.isPresent()) return found;
         }
         return Optional.empty();
     }
 
-    private static @NotNull String textOf(@NotNull Node node) {
-        return Objects.requireNonNullElse(node.getTextContent(), "");
+    private static @NotNull Optional<LocalGitContext.OwnerRepo> firstUrlInDescendants(
+            @NotNull Element element, @NotNull String tagName, @NotNull Set<String> ghHosts) {
+        for (Element child : element.getChildren()) {
+            if (tagName.equals(child.getName())) {
+                final String text = child.getTextTrim();
+                if (!StringUtil.isBlank(text)) {
+                    final Optional<LocalGitContext.OwnerRepo> parsed = LocalGitContext.parseOwnerRepo(text, ghHosts);
+                    if (parsed.isPresent()) return parsed;
+                }
+            }
+            final Optional<LocalGitContext.OwnerRepo> recursive = firstUrlInDescendants(child, tagName, ghHosts);
+            if (recursive.isPresent()) return recursive;
+        }
+        return Optional.empty();
     }
 
-    private static @NotNull DocumentBuilder newSafeBuilder() throws Exception {
-        final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-        factory.setExpandEntityReferences(false);
-        return factory.newDocumentBuilder();
+    private static @Nullable String firstDescendantText(@NotNull Element root, @NotNull String tagName) {
+        for (Element child : root.getChildren()) {
+            if (tagName.equals(child.getName())) return child.getTextTrim();
+            final String found = firstDescendantText(child, tagName);
+            if (found != null) return found;
+        }
+        return null;
     }
 }
