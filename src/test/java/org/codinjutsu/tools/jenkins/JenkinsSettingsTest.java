@@ -8,6 +8,8 @@ import com.intellij.ide.passwordSafe.impl.TestPasswordSafeImpl;
 import com.intellij.mock.MockApplication;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
+import org.codinjutsu.tools.jenkins.model.Job;
+import org.codinjutsu.tools.jenkins.model.JobType;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -85,6 +87,53 @@ class JenkinsSettingsTest {
     void blankApiUrlResetsToDefault() {
         settings.setGithubApiUrl("");
         assertThat(settings.getGithubApiUrl()).isEqualTo("https://api.github.com");
+    }
+
+    @Test
+    void hasFocusedJobReturnsFalseInitially() {
+        assertThat(settings.hasFocusedJob()).isFalse();
+    }
+
+    @Test
+    void hasFocusedJobReturnsTrueAfterSet() {
+        settings.setFocusedJob("http://jenkins/job/my-folder/", "my-folder", "my-folder", "FOLDER");
+        assertThat(settings.hasFocusedJob()).isTrue();
+    }
+
+    @Test
+    void clearFocusedJobResetsHasFocusedJob() {
+        settings.setFocusedJob("http://jenkins/job/my-folder/", "my-folder", "my-folder", "FOLDER");
+        settings.clearFocusedJob();
+        assertThat(settings.hasFocusedJob()).isFalse();
+    }
+
+    @Test
+    void restoreFocusedJobReturnsJobWithCorrectFields() {
+        settings.setFocusedJob(
+                "http://jenkins/job/my-folder/", "my-folder", "team/my-folder", "FOLDER");
+
+        Job job = settings.restoreFocusedJob();
+
+        assertThat(job.getUrl()).isEqualTo("http://jenkins/job/my-folder/");
+        assertThat(job.getName()).isEqualTo("my-folder");
+        assertThat(job.getFullName()).isEqualTo("team/my-folder");
+        assertThat(job.getJobType()).isEqualTo(JobType.FOLDER);
+    }
+
+    @Test
+    void restoreFocusedJobPreservesMultiBranchType() {
+        settings.setFocusedJob(
+                "http://jenkins/job/pipeline/", "pipeline", "pipeline", "MULTI_BRANCH");
+
+        assertThat(settings.restoreFocusedJob().getJobType()).isEqualTo(JobType.MULTI_BRANCH);
+    }
+
+    @Test
+    void restoreFocusedJobDefaultsToFolderForUnknownType() {
+        settings.setFocusedJob(
+                "http://jenkins/job/pipeline/", "pipeline", "pipeline", "UNKNOWN_FUTURE_TYPE");
+
+        assertThat(settings.restoreFocusedJob().getJobType()).isEqualTo(JobType.FOLDER);
     }
 
     private static class MemoryOnlyCredentials implements CredentialStoreManager {
