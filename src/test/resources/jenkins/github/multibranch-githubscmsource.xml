@@ -1,0 +1,17 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject>
+  <sources class="jenkins.branch.MultiBranchProject$BranchSourceList">
+    <data>
+      <jenkins.branch.BranchSource>
+        <source class="org.jenkinsci.plugins.github_branch_source.GitHubSCMSource">
+          <id>some-id</id>
+          <apiUri>https://api.github.com</apiUri>
+          <credentialsId>github-creds</credentialsId>
+          <repoOwner>acme</repoOwner>
+          <repository>widget</repository>
+          <repositoryUrl>https://github.com/acme/widget</repositoryUrl>
+        </source>
+      </jenkins.branch.BranchSource>
+    </data>
+  </sources>
+</org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject>

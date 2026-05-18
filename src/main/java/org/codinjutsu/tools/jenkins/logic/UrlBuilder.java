@@ -221,6 +221,10 @@ public class UrlBuilder {
         return buildUrl(jobUrl, encodePathQuery(String.format(FILL_VALUE_ITEMS, className, param)));
     }
 
+    public URL createJobConfigXmlUrl(String jobUrl) {
+        return buildUrl(jobUrl, "/config.xml");
+    }
+
     private @Nullable URL buildUrl(String context, String pathWithQuery) {
         try {
             return buildUrlNotNull(context, pathWithQuery);

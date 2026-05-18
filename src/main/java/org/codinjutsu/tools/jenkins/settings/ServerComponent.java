@@ -49,11 +49,15 @@ public class ServerComponent implements FormValidationPanel {
     private final JBPasswordField apiToken = new JBPasswordField();
     @GuiField(validators = POSITIVE_INTEGER)
     private final JBIntSpinner connectionTimeout = new JBIntSpinner(10, 5, 300);
+    @GuiField(validators = URL)
+    private final JBTextField githubApiUrl = new JBTextField();
+    private final JBPasswordField githubToken = new JBPasswordField();
     private final JButton testConnection = new JButton(JenkinsControlBundle.message("settings.server.test_connection"));
     private final JLabel connectionStatusLabel = new JLabel();
     private final JTextPane debugTextPane = createDebugTextPane();
     private final JPanel debugPanel = JBUI.Panels.simplePanel(debugTextPane);
     private boolean apiTokenModified;
+    private boolean githubTokenModified;
 
     public ServerComponent(ServerConnectionValidator serverConnectionValidator) {
         apiToken.getDocument().addDocumentListener(new DocumentListener() {
@@ -72,6 +76,26 @@ public class ServerComponent implements FormValidationPanel {
                 setApiTokenModified(true);
             }
         });
+        githubToken.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                setGithubTokenModified(true);
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                setGithubTokenModified(true);
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                setGithubTokenModified(true);
+            }
+        });
+        githubToken.getEmptyText().setText(
+                JenkinsControlBundle.message("settings.server.github.token.empty"));
+        githubApiUrl.getEmptyText().setText(
+                JenkinsControlBundle.message("settings.server.github.apiUrl.empty"));
         final JBDimension size = JBUI.size(150, username.getPreferredSize().height);
         username.setPreferredSize(size);
         username.setHorizontalAlignment(LEFT);
@@ -93,6 +117,8 @@ public class ServerComponent implements FormValidationPanel {
                 .addLabeledComponent(JenkinsControlBundle.message("settings.server.api_token"), apiToken)
                 .addLabeledComponent(JenkinsControlBundle.message("settings.server.connection_timeout"),
                         createConnectionTimeout())
+                .addLabeledComponent(JenkinsControlBundle.message("settings.server.github.apiUrl"), githubApiUrl)
+                .addLabeledComponent(JenkinsControlBundle.message("settings.server.github.token"), githubToken)
                 .addComponentToRightColumn(reloadConfiguration)
                 .addComponentToRightColumn(createTestConnectionPanel())
                 .addComponent(debugPanel)
@@ -198,6 +224,9 @@ public class ServerComponent implements FormValidationPanel {
                 .apiToken(getApiToken())
                 .apiTokenModified(isApiTokenModified())
                 .timeout(getConnectionTimeout())
+                .githubApiUrl(getGithubApiUrl())
+                .githubToken(getGithubToken())
+                .githubTokenModified(isGithubTokenModified())
                 .build();
     }
 
@@ -262,5 +291,40 @@ public class ServerComponent implements FormValidationPanel {
 
     private void setApiTokenModified(boolean apiTokenModified) {
         this.apiTokenModified = apiTokenModified;
+    }
+
+    public @NotNull String getGithubApiUrl() {
+        return githubApiUrl.getText();
+    }
+
+    public void setGithubApiUrl(@Nullable String value) {
+        githubApiUrl.setText(value);
+    }
+
+    public @NotNull String getGithubToken() {
+        return String.valueOf(githubToken.getPassword());
+    }
+
+    public void setGithubToken(@Nullable String value) {
+        githubToken.setPasswordIsStored(StringUtil.isNotBlank(value));
+    }
+
+    @VisibleForTesting
+    void setGithubTokenValue(@Nullable String value) {
+        setGithubToken(value);
+        githubToken.setText(value);
+        setGithubTokenModified(true);
+    }
+
+    public boolean isGithubTokenModified() {
+        return githubTokenModified;
+    }
+
+    public void resetGithubTokenModified() {
+        setGithubTokenModified(false);
+    }
+
+    private void setGithubTokenModified(boolean githubTokenModified) {
+        this.githubTokenModified = githubTokenModified;
     }
 }

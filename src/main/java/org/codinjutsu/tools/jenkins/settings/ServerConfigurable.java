@@ -99,12 +99,18 @@ public class ServerConfigurable implements SearchableConfigurable {
     public static boolean isModified(ServerSetting serverSetting, JenkinsAppSettings jenkinsAppSettings,
                               JenkinsSettings jenkinsSettings) {
         boolean credentialsModified = !(jenkinsSettings.getUsername().equals(serverSetting.getUsername()))
-                || serverSetting.isApiTokenModified();
+                || serverSetting.isApiTokenModified()
+                || serverSetting.isGithubTokenModified();
 
         final var differentJenkinsInstance = !jenkinsAppSettings.getServerUrl().equals(serverSetting.getUrl())
                 || !jenkinsSettings.getJenkinsUrl().equals(serverSetting.getJenkinsUrl());
+        final var settingApiUrl = Optional.ofNullable(serverSetting.getGithubApiUrl())
+                .filter(org.codinjutsu.tools.jenkins.util.StringUtil::isNotBlank)
+                .orElse(jenkinsSettings.getGithubApiUrl());
+        final var githubApiUrlModified = !jenkinsSettings.getGithubApiUrl().equals(settingApiUrl);
         return differentJenkinsInstance
                 || credentialsModified
+                || githubApiUrlModified
                 || jenkinsSettings.getConnectionTimeout() != serverSetting.getTimeout();
     }
 
@@ -134,6 +140,11 @@ public class ServerConfigurable implements SearchableConfigurable {
             Optional.ofNullable(serverComponent).ifPresent(ServerComponent::resetApiTokenModified);
         }
         jenkinsSettings.setConnectionTimeout(serverSetting.getTimeout());
+        jenkinsSettings.setGithubApiUrl(serverSetting.getGithubApiUrl());
+        if (serverSetting.isGithubTokenModified()) {
+            jenkinsSettings.setGithubToken(serverSetting.getGithubToken());
+            Optional.ofNullable(serverComponent).ifPresent(ServerComponent::resetGithubTokenModified);
+        }
     }
 
     @Override
@@ -154,6 +165,11 @@ public class ServerConfigurable implements SearchableConfigurable {
             serverComponentToReset.resetApiTokenModified();
         }
         serverComponentToReset.setConnectionTimeout(jenkinsSettings.getConnectionTimeout());
+        serverComponentToReset.setGithubApiUrl(jenkinsSettings.getGithubApiUrl());
+        if (jenkinsSettings.isGithubTokenStoredInSettings()) {
+            serverComponentToReset.setGithubToken(jenkinsSettings.getGithubToken());
+            serverComponentToReset.resetGithubTokenModified();
+        }
     }
 
     @Override

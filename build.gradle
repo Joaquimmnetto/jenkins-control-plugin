@@ -209,6 +209,9 @@ dependencies {
     implementation ('com.github.cliftonlabs:json-simple:4.0.1') {
         exclude group: 'junit'
     }
+    implementation('org.eclipse.jgit:org.eclipse.jgit:7.0.0.202409031743-r') {
+        exclude group: 'org.slf4j'
+    }
     implementation('com.offbytwo.jenkins:jenkins-client:0.3.8') {
         exclude group: 'org.slf4j'
         exclude group: 'org.apache.logging.log4j'

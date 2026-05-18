@@ -1,5 +1,7 @@
 package org.codinjutsu.tools.jenkins.view;
 
+import com.intellij.openapi.actionSystem.ActionManager;
+import com.intellij.openapi.actionSystem.ActionToolbar;
 import com.intellij.openapi.actionSystem.DefaultActionGroup;
 import com.intellij.openapi.components.Service;
 import com.intellij.openapi.project.Project;
@@ -14,6 +16,7 @@ import org.codinjutsu.tools.jenkins.logic.RequestManagerInterface;
 import org.codinjutsu.tools.jenkins.model.Build;
 import org.codinjutsu.tools.jenkins.model.Job;
 import org.codinjutsu.tools.jenkins.util.GuiUtil;
+import org.codinjutsu.tools.jenkins.view.action.FindGitHubBuildAction;
 import org.codinjutsu.tools.jenkins.view.action.GotoJobBuildPageAction;
 import org.codinjutsu.tools.jenkins.view.action.ShowJobBuildLogAction;
 import org.jetbrains.annotations.NotNull;
@@ -31,6 +34,7 @@ public final class JobDetailPanel extends SimpleToolWindowPanel {
 
     public static final String TOOL_WINDOW_ID = "Jenkins Job";
     private static final String POPUP_PLACE = "JENKINS_JOB_POPUP";
+    private static final String TOOLBAR_PLACE = "JENKINS_JOB_TOOLBAR";
 
     private final Project project;
     private final SimpleTree buildTree;
@@ -66,6 +70,7 @@ public final class JobDetailPanel extends SimpleToolWindowPanel {
 
     public void initGui() {
         installActionsInPopupMenu();
+        installToolbar();
     }
 
     private void installActionsInPopupMenu() {
@@ -73,6 +78,15 @@ public final class JobDetailPanel extends SimpleToolWindowPanel {
         popupGroup.add(new GotoJobBuildPageAction(this));
         popupGroup.add(new ShowJobBuildLogAction(this));
         PopupHandler.installPopupMenu(buildTree, popupGroup, POPUP_PLACE);
+    }
+
+    private void installToolbar() {
+        final DefaultActionGroup toolbarGroup = new DefaultActionGroup("JenkinsJobToolbarActions", false);
+        toolbarGroup.add(new FindGitHubBuildAction());
+        final ActionToolbar toolbar = ActionManager.getInstance()
+                .createActionToolbar(TOOLBAR_PLACE, toolbarGroup, true);
+        toolbar.setTargetComponent(buildTree);
+        setToolbar(toolbar.getComponent());
     }
 
     public void showJob(@NotNull Job job) {

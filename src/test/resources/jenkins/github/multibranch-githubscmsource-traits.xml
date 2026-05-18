@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject>
+  <sources class="jenkins.branch.MultiBranchProject$BranchSourceList">
+    <data>
+      <jenkins.branch.BranchSource>
+        <source class="org.jenkinsci.plugins.github_branch_source.GitHubSCMSource"
+                plugin="github-branch-source@1824.v046257273408">
+          <id>1000000000000001</id>
+          <apiUri>https://api.github.com</apiUri>
+          <credentialsId>github-credentials</credentialsId>
+          <repoOwner>acme</repoOwner>
+          <repository>widget</repository>
+          <traits>
+            <org.jenkinsci.plugins.github__branch__source.BranchDiscoveryTrait>
+              <strategyId>1</strategyId>
+            </org.jenkinsci.plugins.github__branch__source.BranchDiscoveryTrait>
+            <jenkins.plugins.git.traits.CloneOptionTrait plugin="git@5.7.0">
+              <extension class="hudson.plugins.git.extensions.impl.CloneOption">
+                <shallow>false</shallow>
+                <noTags>false</noTags>
+                <reference>/var/jenkins/scm-cache/refs</reference>
+                <timeout>45</timeout>
+              </extension>
+            </jenkins.plugins.git.traits.CloneOptionTrait>
+            <jenkins.plugins.git.traits.RefSpecsSCMSourceTrait plugin="git@5.7.0">
+              <templates>
+                <jenkins.plugins.git.traits.RefSpecsSCMSourceTrait_-RefSpecTemplate>
+                  <value>+refs/heads/main:refs/remotes/@{remote}/main</value>
+                </jenkins.plugins.git.traits.RefSpecsSCMSourceTrait_-RefSpecTemplate>
+              </templates>
+            </jenkins.plugins.git.traits.RefSpecsSCMSourceTrait>
+          </traits>
+        </source>
+      </jenkins.branch.BranchSource>
+    </data>
+  </sources>
+</org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject>
