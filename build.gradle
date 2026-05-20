@@ -291,6 +291,22 @@ runIde {
     systemProperty('ide.plugins.allow.unload.from.sources', 'true')
 }
 
+intellijPlatformTesting {
+    runIde {
+        register("runRider") {
+            type = IntelliJPlatformType.Rider
+            version = readPropertyString("riderVersion")
+        }
+    }
+}
+
+tasks.named("runRider") {
+    jvmArgs = ['-XX:+UnlockDiagnosticVMOptions']
+    systemProperty('ide.plugins.snapshot.on.unload.fail', 'true')
+    systemProperty('ide.plugins.analyze.snapshot', 'true')
+    systemProperty('ide.plugins.allow.unload.from.sources', 'true')
+}
+
 def snapshotSpec = copySpec {
     from 'build/distributions'
     include "${readPropertyString('pluginName')}-${project.version}.zip"
