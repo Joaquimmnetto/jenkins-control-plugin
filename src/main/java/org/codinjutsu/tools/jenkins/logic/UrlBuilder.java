@@ -225,6 +225,19 @@ public class UrlBuilder {
         return buildUrl(jobUrl, "/config.xml");
     }
 
+    public URL createWfapiDescribeUrl(String buildUrl) {
+        return buildUrl(removeTrailingSlash(buildUrl), "/wfapi/describe");
+    }
+
+    public URL createWfapiStepsUrl(String buildUrl, String stageId) {
+        return buildUrl(removeTrailingSlash(buildUrl), "/wfapi/stages/" + encodePath(stageId) + "/steps");
+    }
+
+    public URL createWfapiNodeLogUrl(String buildUrl, String nodeId) {
+        return buildUrl(removeTrailingSlash(buildUrl),
+                "/execution/node/" + encodePath(nodeId) + "/wfapi/log");
+    }
+
     private @Nullable URL buildUrl(String context, String pathWithQuery) {
         try {
             return buildUrlNotNull(context, pathWithQuery);

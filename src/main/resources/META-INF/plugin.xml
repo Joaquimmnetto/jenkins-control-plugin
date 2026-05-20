@@ -54,6 +54,12 @@
                     doNotActivateOnStart="true"
                     icon="JenkinsControlIcons.JENKINS_TOOLWINDOW_ICON"
                     factoryClass="org.codinjutsu.tools.jenkins.view.action.LogToolWindowFactory"/>
+        <toolWindow id="Jenkins Pipeline"
+                    anchor="bottom"
+                    canCloseContents="true"
+                    doNotActivateOnStart="true"
+                    icon="JenkinsControlIcons.JENKINS_TOOLWINDOW_ICON"
+                    factoryClass="org.codinjutsu.tools.jenkins.view.action.pipeline.PipelineToolWindowFactory"/>
         <toolWindow id="Jenkins Job"
                     anchor="right"
                     canCloseContents="false"
@@ -86,6 +92,14 @@
         </action>
         <action id="Jenkins.ReloadConfiguration"
                 class="org.codinjutsu.tools.jenkins.view.action.ReloadConfigurationAction">
+        </action>
+
+        <action id="Jenkins.ShowPipelineStages"
+                class="org.codinjutsu.tools.jenkins.view.action.ShowPipelineAction"
+                text="Show Pipeline Stages"
+                description="Show build pipeline stages and step logs"
+                icon="AllIcons.Vcs.Branch">
+            <override-text place="GoToAction"/>
         </action>
 
         <group id="Jenkins.ShowSettingsGroup" popup="true" icon="AllIcons.General.Settings">

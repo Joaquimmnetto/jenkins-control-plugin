@@ -159,5 +159,14 @@ public class JenkinsAppSettings implements PersistentStateComponent<JenkinsAppSe
         private boolean autoLoadBuilds = false;
         private DoubleClickAction doubleClickAction = DoubleClickAction.DEFAULT;
         private boolean showLogIfTriggerBuild = true;
+        private int pipelineLogLines = 10_000;
+    }
+
+    public int getPipelineLogLines() {
+        return myState.getPipelineLogLines();
+    }
+
+    public void setPipelineLogLines(int pipelineLogLines) {
+        myState.setPipelineLogLines(pipelineLogLines);
     }
 }

@@ -29,6 +29,7 @@ import com.offbytwo.jenkins.model.*;
 import org.codinjutsu.tools.jenkins.JenkinsAppSettings;
 import org.codinjutsu.tools.jenkins.JenkinsSettings;
 import org.codinjutsu.tools.jenkins.exception.*;
+import org.codinjutsu.tools.jenkins.exception.AuthenticationException;
 import org.codinjutsu.tools.jenkins.model.Build;
 import org.codinjutsu.tools.jenkins.model.Computer;
 import org.codinjutsu.tools.jenkins.model.Job;
@@ -43,6 +44,7 @@ import org.jetbrains.annotations.VisibleForTesting;
 
 import javax.swing.*;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.*;
@@ -64,6 +66,7 @@ public class RequestManager implements RequestManagerInterface, Disposable {
 
     private final UrlBuilder urlBuilder;
     private @NotNull JenkinsParser jenkinsParser = new JenkinsJsonParser(UnaryOperator.identity());
+    private final PipelineJsonParser pipelineJsonParser = new PipelineJsonParser();
     private SecurityClient securityClient;
     private @Deprecated JenkinsPlateform jenkinsPlateform = JenkinsPlateform.CLASSIC;
     private JenkinsServer jenkinsServer;
@@ -548,6 +551,54 @@ return withNestedJobs(jobsFromView);
     @VisibleForTesting
     void setJenkinsParser(@NotNull JenkinsParser jenkinsParser) {
         this.jenkinsParser = jenkinsParser;
+    }
+
+    @Override
+    @NotNull
+    public List<PipelineStage> loadPipelineStages(@NotNull Build build) {
+        if (handleNotYetLoggedInState()) return Collections.emptyList();
+        try {
+            final URL url = urlBuilder.createWfapiDescribeUrl(build.getUrl());
+            final String json = securityClient.execute(url);
+            return pipelineJsonParser.parseStages(json);
+        } catch (AuthenticationException ex) {
+            if ("Not found".equals(ex.getMessage())) {
+                return Collections.emptyList();
+            }
+            throw ex;
+        }
+    }
+
+    @Override
+    @NotNull
+    public List<PipelineStep> loadPipelineSteps(@NotNull Build build, @NotNull String stageId) {
+        if (handleNotYetLoggedInState()) return Collections.emptyList();
+        try {
+            final URL url = urlBuilder.createWfapiStepsUrl(build.getUrl(), stageId);
+            final String json = securityClient.execute(url);
+            return pipelineJsonParser.parseSteps(json);
+        } catch (AuthenticationException ex) {
+            if ("Not found".equals(ex.getMessage())) {
+                return Collections.emptyList();
+            }
+            throw ex;
+        }
+    }
+
+    @Override
+    public boolean fetchNodeLog(@NotNull Build build, @NotNull String nodeId,
+                                @NotNull OutputStream out) {
+        if (handleNotYetLoggedInState()) return false;
+        try {
+            final URL url = urlBuilder.createWfapiNodeLogUrl(build.getUrl(), nodeId);
+            final String json = securityClient.execute(url);
+            final String text = pipelineJsonParser.parseLogText(json);
+            out.write(text.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            return pipelineJsonParser.parseHasMore(json);
+        } catch (IOException e) {
+            logger.warn("Cannot write node log for node " + nodeId, e);
+            return false;
+        }
     }
 
     @Override

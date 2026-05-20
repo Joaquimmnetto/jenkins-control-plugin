@@ -1,0 +1,7 @@
+{
+  "nodeId": "8",
+  "nodeStatus": "SUCCESS",
+  "hasMore": false,
+  "text": "[Pipeline] sh\n+ mvn clean install\n[INFO] BUILD SUCCESS\n",
+  "consoleUrl": "/job/my-pipeline/42/console"
+}

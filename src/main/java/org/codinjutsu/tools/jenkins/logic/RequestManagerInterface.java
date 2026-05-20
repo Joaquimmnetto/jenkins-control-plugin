@@ -7,6 +7,8 @@ import org.codinjutsu.tools.jenkins.model.*;
 import org.codinjutsu.tools.jenkins.security.JenkinsVersion;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.OutputStream;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -49,4 +51,19 @@ public interface RequestManagerInterface {
     List<Computer> loadComputer(JenkinsAppSettings settings);
 
     List<String> getGitParameterChoices(Job job, JobParameter jobParameter);
+
+    @NotNull
+    default List<PipelineStage> loadPipelineStages(@NotNull Build build) {
+        return Collections.emptyList();
+    }
+
+    @NotNull
+    default List<PipelineStep> loadPipelineSteps(@NotNull Build build, @NotNull String stageId) {
+        return Collections.emptyList();
+    }
+
+    default boolean fetchNodeLog(@NotNull Build build, @NotNull String nodeId,
+                                 @NotNull OutputStream out) {
+        return false;
+    }
 }

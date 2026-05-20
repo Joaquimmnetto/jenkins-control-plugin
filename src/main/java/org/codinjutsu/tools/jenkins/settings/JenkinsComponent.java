@@ -71,6 +71,7 @@ public class JenkinsComponent implements SearchableConfigurable {
                 || jenkinsAppSettings.getJobRefreshPeriod() != appSettingsFromUi.getJobRefreshPeriod()
                 || jenkinsAppSettings.getNumBuildRetries() != appSettingsFromUi.getNumBuildRetries()
                 || jenkinsAppSettings.getBuildsToLoadPerJob() != appSettingsFromUi.getBuildsToLoadPerJob()
+                || jenkinsAppSettings.getPipelineLogLines() != appSettingsFromUi.getPipelineLogLines()
                 || isUseGreenColor
                 || isAutoLoadBuilds
                 || isDoubleClickActionChanged
@@ -107,6 +108,7 @@ public class JenkinsComponent implements SearchableConfigurable {
         jenkinsAppSettings.setJobRefreshPeriod(jenkinsAppSettingsFromUi.getJobRefreshPeriod());
         jenkinsAppSettings.setNumBuildRetries(jenkinsAppSettingsFromUi.getNumBuildRetries());
         jenkinsAppSettings.setBuildsToLoadPerJob(jenkinsAppSettingsFromUi.getBuildsToLoadPerJob());
+        jenkinsAppSettings.setPipelineLogLines(jenkinsAppSettingsFromUi.getPipelineLogLines());
         jenkinsAppSettings.setUseGreenColor(jenkinsAppSettingsFromUi.isUseGreenColor());
         jenkinsAppSettings.setAutoLoadBuilds(jenkinsAppSettingsFromUi.isAutoLoadBuilds());
         jenkinsAppSettings.setDoubleClickAction(jenkinsAppSettingsFromUi.getDoubleClickAction());
@@ -130,6 +132,7 @@ public class JenkinsComponent implements SearchableConfigurable {
         appSettingComponentToReset.setJobRefreshPeriod(jenkinsAppSettings.getJobRefreshPeriod());
         appSettingComponentToReset.setNumBuildRetries(jenkinsAppSettings.getNumBuildRetries());
         appSettingComponentToReset.setBuildsToLoadPerJob(jenkinsAppSettings.getBuildsToLoadPerJob());
+        appSettingComponentToReset.setPipelineLogLines(jenkinsAppSettings.getPipelineLogLines());
         appSettingComponentToReset.setDoubleClickAction(jenkinsAppSettings.getDoubleClickAction());
         appSettingComponentToReset.setUseGreenColor(jenkinsAppSettings.isUseGreenColor());
         appSettingComponentToReset.setAutoLoadBuilds(jenkinsAppSettings.isAutoLoadBuilds());

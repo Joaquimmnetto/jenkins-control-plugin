@@ -1,0 +1,41 @@
+{
+  "name": "#42",
+  "status": "FAILED",
+  "startTimeMillis": 1700000000000,
+  "endTimeMillis": 1700000008000,
+  "durationMillis": 8000,
+  "stages": [
+    {
+      "id": "3",
+      "name": "Checkout",
+      "status": "SUCCESS",
+      "startTimeMillis": 1700000000000,
+      "durationMillis": 2000,
+      "pauseDurationMillis": 0
+    },
+    {
+      "id": "7",
+      "name": "Build",
+      "status": "SUCCESS",
+      "startTimeMillis": 1700000002000,
+      "durationMillis": 3000,
+      "pauseDurationMillis": 0
+    },
+    {
+      "id": "11",
+      "name": "Deploy",
+      "status": "FAILED",
+      "startTimeMillis": 1700000005000,
+      "durationMillis": 3000,
+      "pauseDurationMillis": 0
+    },
+    {
+      "id": "15",
+      "name": "Notify",
+      "status": "NOT_EXECUTED",
+      "startTimeMillis": 0,
+      "durationMillis": 0,
+      "pauseDurationMillis": 0
+    }
+  ]
+}

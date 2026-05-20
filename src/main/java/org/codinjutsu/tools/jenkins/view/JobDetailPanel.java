@@ -19,6 +19,7 @@ import org.codinjutsu.tools.jenkins.util.GuiUtil;
 import org.codinjutsu.tools.jenkins.view.action.FindGitHubBuildAction;
 import org.codinjutsu.tools.jenkins.view.action.GotoJobBuildPageAction;
 import org.codinjutsu.tools.jenkins.view.action.ShowJobBuildLogAction;
+import org.codinjutsu.tools.jenkins.view.action.ShowPipelineAction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -77,6 +78,7 @@ public final class JobDetailPanel extends SimpleToolWindowPanel {
         final DefaultActionGroup popupGroup = new DefaultActionGroup("JenkinsJobPopupAction", true);
         popupGroup.add(new GotoJobBuildPageAction(this));
         popupGroup.add(new ShowJobBuildLogAction(this));
+        popupGroup.add(ActionManager.getInstance().getAction(ShowPipelineAction.ACTION_ID));
         PopupHandler.installPopupMenu(buildTree, popupGroup, POPUP_PLACE);
     }
 

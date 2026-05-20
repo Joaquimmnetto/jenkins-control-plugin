@@ -1,0 +1,23 @@
+{
+  "id": "7",
+  "name": "Build",
+  "status": "SUCCESS",
+  "startTimeMillis": 1700000002000,
+  "durationMillis": 3000,
+  "stageFlowNodes": [
+    {
+      "id": "8",
+      "name": "Shell Script",
+      "status": "SUCCESS",
+      "durationMillis": 2000,
+      "parameterDescription": "mvn clean install"
+    },
+    {
+      "id": "9",
+      "name": "Archive Artifacts",
+      "status": "SUCCESS",
+      "durationMillis": 500,
+      "parameterDescription": null
+    }
+  ]
+}

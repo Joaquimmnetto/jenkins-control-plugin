@@ -28,6 +28,8 @@ public class AppSettingComponent implements FormValidationPanel {
     private final JBIntSpinner numBuildRetries = new JBIntSpinner(0, 0, 50);
     @GuiField(validators = POSITIVE_INTEGER)
     private final JBIntSpinner buildsToLoadPerJob = new JBIntSpinner(0, 0, 100);
+    @GuiField(validators = POSITIVE_INTEGER)
+    private final JBIntSpinner pipelineLogLines = new JBIntSpinner(10_000, 100, 100_000);
     private final ComboBox<DoubleClickAction> doubleClickAction = createDoubleClickActionComboBox();
 
     private final JBCheckBox useGreenColor = new JBCheckBox(JenkinsControlBundle.message("settings.app.useGreenColor"));
@@ -47,6 +49,8 @@ public class AppSettingComponent implements FormValidationPanel {
                         numBuildRetries)
                 .addLabeledComponent(JenkinsControlBundle.message("settings.app.buildsToLoad.label"),
                         buildsToLoadPerJob)
+                .addLabeledComponent(JenkinsControlBundle.message("settings.app.pipelineLogLines.label"),
+                        pipelineLogLines)
                 .addLabeledComponent(JenkinsControlBundle.message("settings.app.doubleClickAction.label"),
                         doubleClickAction)
                 .addComponent(useGreenColor)
@@ -78,6 +82,7 @@ public class AppSettingComponent implements FormValidationPanel {
         jenkinsAppSettings.setJobRefreshPeriod(jobRefreshPeriod.getNumber());
         jenkinsAppSettings.setNumBuildRetries(numBuildRetries.getNumber());
         jenkinsAppSettings.setBuildsToLoadPerJob(buildsToLoadPerJob.getNumber());
+        jenkinsAppSettings.setPipelineLogLines(pipelineLogLines.getNumber());
 
         jenkinsAppSettings.setUseGreenColor(useGreenColor.isSelected());
         jenkinsAppSettings.setAutoLoadBuilds(autoLoadBuildsOnFirstLevel.isSelected());
@@ -100,6 +105,10 @@ public class AppSettingComponent implements FormValidationPanel {
 
     public void setBuildsToLoadPerJob(int buildsToLoadPerJob) {
         this.buildsToLoadPerJob.setNumber(buildsToLoadPerJob);
+    }
+
+    public void setPipelineLogLines(int pipelineLogLines) {
+        this.pipelineLogLines.setNumber(pipelineLogLines);
     }
 
     public void setDoubleClickAction(DoubleClickAction doubleClickAction) {
